@@ -43,7 +43,7 @@ void UCSO::clbkSetClassCaps(FILEHANDLE cfg)
 
 void UCSO::LoadConfig()
 {
-	FILEHANDLE configFile = oapiOpenFile("UCSOConfig.cfg", FILE_IN_ZEROONFAIL, CONFIG);
+	FILEHANDLE configFile = oapiOpenFile("UCSO_Config.cfg", FILE_IN_ZEROONFAIL, CONFIG);
 	if (configFile) {
 		if (!oapiReadItem_float(configFile, "ContainerMass", containerMass)) containerMass = 85;
 		if (!oapiReadItem_bool(configFile, "DisplayInfo", displayInfo)) displayInfo = true;
