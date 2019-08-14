@@ -1,6 +1,7 @@
 #include "UCSO_SDK.h"
 
-UCSO* UCSO::Init(VESSEL* vessel) {
+UCSO* UCSO::CreateInstance(VESSEL* vessel)
+{
 	return new UCSO(vessel);
 }
 
@@ -12,12 +13,14 @@ UCSO::UCSO(VESSEL* vessel)
 	maxTotalCargoMass = -1;
 	totalCargoMass = 0;
 	grappleDistance = 50;
-	releaseVel = 1;
+	releaseVel = 0.05;
+	isTotalMassGet = false;
 }
 
 void UCSO::SetSlotAttachment(int slot, ATTACHMENTHANDLE attachmentHandle)
 {
-	attachsMap[slot] = attachmentHandle;
+	if (attachsMap.find(slot) != attachsMap.end() && !attachmentHandle) attachsMap.erase(slot);
+	else if(attachmentHandle) attachsMap[slot] = attachmentHandle;
 }
 
 void UCSO::SetMaxCargoMass(double maxCargoMass)
@@ -107,27 +110,18 @@ int UCSO::ReleaseCargo(int slot)
 
 	CargoVessel* cargo = static_cast<CargoVessel*>(oapiGetVesselInterface(pair.second));
 
-	if (vessel->GetFlightStatus() & 1); // Release when on ground
+	if (vessel->GroundContact()); // Release when on ground
 	else {
-		auto objectHandle = GetAttachmentStatus(attachsMap[pair.first]);
-		cargoReleased = vessel->DetachChild(attachsMap[pair.first], releaseVel);
+		cargoReleased = vessel->DetachChild(attachsMap[pair.first]);
 
-		/* Vessel Handle is presumeably non-null at this point, but it's safer to check */
-		if (objectHandle != NULL) {
-			/* Retrieve vessel handle of the released cargo and retrive its VESSELSTATUS struct */
-			auto vesselHandle = oapiGetVesselInterface(objectHandle);
-			VESSELSTATUS2 vs2;
-			memset(&vs2, 0, sizeof(vs2));
-			vs2.version = 2;
-			GetStatusEx(&vs2);
+		VESSELSTATUS2 status;
+		memset(&status, 0, sizeof(status));
+		status.version = 2;
+		cargo->GetStatusEx(&status);
 
-			/* Convert the release velocity to the ecliptic frame & set the vessel state */
-			VECTOR3 relativeVelocity;
-			Local2Rel(_V(0,releaseVel,0), relativeVelocity);
-			vs2.rvel += relativeVelocity;
-			DefSetStateEx(&vs2);
-		}
+		status.rvel.y += releaseVel;
 
+		cargo->DefSetStateEx(&status);
 	}
 
 	if (cargoReleased) { cargo->SetAttachmentState(false); return CARGO_RELEASED; }

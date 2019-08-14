@@ -1,3 +1,4 @@
+#pragma once
 #include <string>
 
 enum CargoType {
@@ -7,6 +8,7 @@ enum CargoType {
 };
 
 struct DataStruct {
+	DataStruct() { type = -1; resourceMass = 0; unpackDelay = 0; unpackMode = -1; };
 	int type;
 
 	std::string resourceType;

@@ -11,10 +11,6 @@ DLLCLBK void ovcExit(VESSEL* vessel)
 	if (vessel) delete (UCSO*)vessel;
 }
 
-UCSO::UCSO(OBJHANDLE hObj, int fmodel) : CargoVessel(hObj, fmodel)
-{
-}
-
 void UCSO::clbkSetClassCaps(FILEHANDLE cfg)
 {
 	// Read the mass to add the container mass
@@ -119,7 +115,7 @@ void UCSO::clbkPreStep(double simt, double simdt, double mjd)
 
 	if (landing) {
 		// If the status is landed
-		if (GetFlightStatus() & 1) { 
+		if (GroundContact()) { 
 			UnpackCargo(); 
 			landing = false; 
 		}

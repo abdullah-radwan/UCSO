@@ -1,9 +1,10 @@
+#pragma once
 #include <Orbitersdk.h>
 #include "CargoVessel.h"
 
 class UCSO : public CargoVessel {
 public:
-	UCSO(OBJHANDLE hObj, int fmodel);
+	UCSO(OBJHANDLE hObj, int fmodel) : CargoVessel(hObj, fmodel) {};
 	~UCSO() {}
 	void clbkSetClassCaps(FILEHANDLE cfg);
 	void clbkLoadStateEx(FILEHANDLE scn, void* status);

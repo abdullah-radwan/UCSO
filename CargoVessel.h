@@ -1,3 +1,4 @@
+#pragma once
 #include <Orbitersdk.h>
 #include "UCSO_Constants.h"
 
@@ -19,7 +20,7 @@ protected:
 	bool isAttached = false;
 	double containerMass = 0;
 
-	void SetSpawnName();
+	std::string SetSpawnName();
 	void DisplayMessage(std::string message);
 };
 
