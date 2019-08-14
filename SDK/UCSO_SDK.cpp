@@ -108,7 +108,27 @@ int UCSO::ReleaseCargo(int slot)
 	CargoVessel* cargo = static_cast<CargoVessel*>(oapiGetVesselInterface(pair.second));
 
 	if (vessel->GetFlightStatus() & 1); // Release when on ground
-	else cargoReleased = vessel->DetachChild(attachsMap[pair.first], releaseVel);
+	else {
+		auto objectHandle = GetAttachmentStatus(attachsMap[pair.first]);
+		cargoReleased = vessel->DetachChild(attachsMap[pair.first], releaseVel);
+
+		/* Vessel Handle is presumeably non-null at this point, but it's safer to check */
+		if (objectHandle != NULL) {
+			/* Retrieve vessel handle of the released cargo and retrive its VESSELSTATUS struct */
+			auto vesselHandle = oapiGetVesselInterface(objectHandle);
+			VESSELSTATUS2 vs2;
+			memset(&vs2, 0, sizeof(vs2));
+			vs2.version = 2;
+			GetStatusEx(&vs2);
+
+			/* Convert the release velocity to the ecliptic frame & set the vessel state */
+			VECTOR3 relativeVelocity;
+			Local2Rel(_V(0,releaseVel,0), relativeVelocity);
+			vs2.rvel += relativeVelocity;
+			DefSetStateEx(&vs2);
+		}
+
+	}
 
 	if (cargoReleased) { cargo->SetAttachmentState(false); return CARGO_RELEASED; }
 
