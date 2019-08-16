@@ -16,7 +16,7 @@ void UCSO::clbkSetClassCaps(FILEHANDLE cfg)
 	// Read the mass to add the container mass
 	oapiReadItem_float(cfg, "Mass", dataStruct.resourceMass);
 
-	if (!oapiReadItem_int(cfg, "Type", dataStruct.type)) { oapiWriteLog("UCSO Warning: Type not specifed."); return; }
+	if (!oapiReadItem_int(cfg, "Type", dataStruct.type)) { oapiWriteLog("UCSO: Warning: Type not specifed."); return; }
 
 	switch (dataStruct.type)
 	{
@@ -54,8 +54,6 @@ void UCSO::LoadConfig()
 
 void UCSO::clbkLoadStateEx(FILEHANDLE scn, void* status)
 {
-	LoadConfig();
-
 	char* line;
 
 	while (oapiReadScenario_nextline(scn, line)) {
@@ -86,12 +84,11 @@ void UCSO::clbkLoadStateEx(FILEHANDLE scn, void* status)
 		}
 		else ParseScenarioLineEx(line, status);;
 	}
-	
-	SetEmptyMass(GetEmptyMass() + containerMass);
 }
 
 void UCSO::clbkPostCreation()
 {
+	SetEmptyMass(GetEmptyMass() + containerMass);
 	isAttached = GetAttachmentStatus(GetAttachmentHandle(true, 0));
 }
 

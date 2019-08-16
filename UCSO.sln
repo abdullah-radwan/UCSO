@@ -9,18 +9,18 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "UCSO_SDK", "SDK\UCSO_SDK.vc
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|x86 = Debug|x86
-		Release|x86 = Release|x86
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{FDD37414-3C8F-4322-8B45-BAAEC4B23F38}.Debug|x86.ActiveCfg = Debug|Win32
-		{FDD37414-3C8F-4322-8B45-BAAEC4B23F38}.Debug|x86.Build.0 = Debug|Win32
-		{FDD37414-3C8F-4322-8B45-BAAEC4B23F38}.Release|x86.ActiveCfg = Release|Win32
-		{FDD37414-3C8F-4322-8B45-BAAEC4B23F38}.Release|x86.Build.0 = Release|Win32
-		{5B63AE34-F829-42AD-A536-F94F2CA19121}.Debug|x86.ActiveCfg = Debug|Win32
-		{5B63AE34-F829-42AD-A536-F94F2CA19121}.Debug|x86.Build.0 = Debug|Win32
-		{5B63AE34-F829-42AD-A536-F94F2CA19121}.Release|x86.ActiveCfg = Release|Win32
-		{5B63AE34-F829-42AD-A536-F94F2CA19121}.Release|x86.Build.0 = Release|Win32
+		{FDD37414-3C8F-4322-8B45-BAAEC4B23F38}.Debug|Win32.ActiveCfg = Debug|Win32
+		{FDD37414-3C8F-4322-8B45-BAAEC4B23F38}.Debug|Win32.Build.0 = Debug|Win32
+		{FDD37414-3C8F-4322-8B45-BAAEC4B23F38}.Release|Win32.ActiveCfg = Release|Win32
+		{FDD37414-3C8F-4322-8B45-BAAEC4B23F38}.Release|Win32.Build.0 = Release|Win32
+		{5B63AE34-F829-42AD-A536-F94F2CA19121}.Debug|Win32.ActiveCfg = Debug|Win32
+		{5B63AE34-F829-42AD-A536-F94F2CA19121}.Debug|Win32.Build.0 = Debug|Win32
+		{5B63AE34-F829-42AD-A536-F94F2CA19121}.Release|Win32.ActiveCfg = Release|Win32
+		{5B63AE34-F829-42AD-A536-F94F2CA19121}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

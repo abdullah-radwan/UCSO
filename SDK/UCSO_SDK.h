@@ -9,59 +9,82 @@
 #pragma once
 #include <orbitersdk.h>
 #include <map>
+#include <vector>
 #include "../CargoVessel.h"
 
 class UCSO
 {
 public:
-	// The grapple result, as returned from GrappleCargo function.
+	// The addition result as returned from AddCargo method.
+	enum AddResult {
+		CARGO_ADDED = 8, // The cargo is added successfully.
+		INVALID_INDEX,   // The passed index is invalid.
+		ADD_FAILED       // The addition failed.
+	};
+
+	// The grapple result as returned from GrappleCargo and AddCargo method.
 	enum GrappleResult {
 		CARGO_GRAPPLED = 0,      // The cargo is grappled successfully.
 		NO_CARGO_IN_RANGE,       // No cargo in the grapple range.
 		MAX_MASS_EXCEEDED,       // The maximum one cargo mass will be exceeded if the cargo is added.
 		MAX_TOTAL_MASS_EXCEEDED, // The maximum total cargo mass will be exceeded if the cargo is added.
-		SLOT_OCCUPIED,           // The passed slot is occupied.
-		SLOT_UNDEFINED,          // The passed slot is undefiend.
+		SLOT_OCCUPIED,           // The passed slot is occupied, or all slots are occupied.
+		SLOT_UNDEFINED,          // The passed slot is undefiend, or no slots are defined.
 		GRAPPLE_FAILED           // The grapple failed.
 	};
 
-	// The release result, as returned from ReleaseCargo, UnpackCargo, and DeleteCargo functions.
+	// The release result as returned from ReleaseCargo, UnpackCargo, and DeleteCargo methods.
 	enum ReleaseResult
 	{
-		CARGO_RELEASED = 0, // The cargo is released successfully. For ReleaseCargo function only.
+		CARGO_RELEASED = 0, // The cargo is released successfully. For ReleaseCargo method only.
 		SLOT_EMPTY,         // The passed slot is empty, or all slots are empty if -1 is passed.
-		SLOT_UNDEF,         // The passed slot is undefined, or the no slots are defined.
-		RELEASE_FAILED      // The release failed. For ReleaseCargo function only.
+		SLOT_UNDEF,         // The passed slot is undefined, or no slots are defined.
+		RELEASE_FAILED      // The release failed. For ReleaseCargo method only.
 	};
 
-	// The unpack result, as returned from UnpackCargo function.
+	// The unpack result as returned from UnpackCargo method.
 	enum UnpackResult
 	{
-		CARGO_UNPACKED = 4, // The cargo is unpacked successfully.
-		NOT_UNPACKABLE,     // The cargo is unpackable.
-		UNPACK_FAILED       // The unpack failed.
+		CARGO_UNPACKED = 4,     // The cargo is unpacked successfully.
+		NOT_UNPACKABLE,         // The cargo is unpackable.
+		NO_UNPACKABLE_IN_RANGE, // No unpackable cargo in range
+		UNPACK_FAILED           // The unpack failed.
 	};
 
-	// The delete result as returned from DeleteCargo function.
+	// The delete result as returned from DeleteCargo method.
 	enum DeleteResult
 	{
 		CARGO_DELETED = 4, // The cargo is deleted successfully.
 		DELETE_FAILED      // The delete failed.
 	};
 
-	// Performs one-time initialization of UCSO. It should be called from your vessel's constructor.
+	// The cargo information as returned from GetCargoInfo method.
+	struct CargoInfo
+	{
+		const char* type;         // The cargo type: "Static", "Resource", and "Unpackable".
+		double mass;              // The cargo mass in kilograms.
+
+		const char* resourceType; // The resource type
+		double resourceMass;      // The resource mass in kilograms: the cargo mass minus the container mass.
+
+		const char* spawnModule;  // The spawn module
+		const char* unpackMode;   // The unpack mode: "Landed", "Delayed", and "Manual".
+		int unpackDelay;          // The unpack delay in seconds.
+	};
+
+	// Performs one-time initialization of UCSO. It can be called from your vessel's constructor.
 	// Parameters:
 	//	vessel: pointer to the calling vessel.
 	// Returns a UCSO instance.
 	// NOTE: Don't forget to delete the returned object when you no longer need it (e.g., in your vessel's destructor).
 	static UCSO* CreateInstance(VESSEL* vessel);
 
-	// Sets the slot number for a given attachment, to use with the SDK functions. It must be called before any other calls to the SDK.
+	// Sets the slot number for a given attachment, to use with the SDK methods. It must be called before any other calls to the SDK.
 	// To delete a slot, pass the slot number and NULL for the attachment handle.
 	// Parameters:
 	//	slot: the slot number. You can use any number but not -1, as it's reserved.
 	//		You can use the number multiple times to update the slot attachment handle.
-	//	attachmentHandle: the attachment handle. If NULL, the slot will be removed.
+	//	attachmentHandle: the attachment handle. If NULL, the passed slot will be removed.
 	void SetSlotAttachment(int slot, ATTACHMENTHANDLE attachmentHandle);
 
 	// Sets the maximum one cargo mass for the vessel.
@@ -81,32 +104,58 @@ public:
 	//	grappleDistance: the distance in meters. The default value is 50 meters.
 	void SetMaxGrappleDistance(double grappleDistance);
 
+	// Sets the maximum unpack distance in meters.
+	// Parameters:
+	//	unpackDistance: the distance in meters. The default value is 3 meters.
+	void SetMaxUnpackDistance(double unpackDistance);
+
 	// Sets the cargo release velocity if released in space.
 	// Parameters:
 	//	releaseVel: the release velocity in m/s. The default value is 0.05 m/s.
 	void SetReleaseVelocity(double releaseVel);
 
+	// Returns the cargo count, which is the number of cargo in Config\Vessels\UCSO folder.
+	// A typical use case:
+	// 	for (int cargoIndex = 0;  cargoIndex < GetCargoCount();  cargoIndex++) {
+	//		const char* cargoName = GetCargoName(cargoIndex);
+	//		int addResult = AddCargo(cargoIndex); }
+	int GetCargoCount();
+
+	// Returns the cargo name from the passed index, which is the file name from Config\Vessels\UCSO folder without .cfg
+	//	Or empty string if the index is invalid.
+	// Parameters:
+	//	index: the cargo index.
+	const char* GetCargoName(int index);
+
+	// Adds the passed cargo to the passed slot.
+	// Parameters:
+	//	index: the cargo index.
+	//  slot: the slot number. If no slot is passed, the first empty slot will be used.
+	// Returns the result as GrappleResult and AddResult eums.
+	int AddCargo(int index, int slot = -1);
+
 	// Grapples the cargo in the passed slot.
 	// Parameters:
 	//	slot: the slot number. If no slot is passed, the first empty slot will be used.
 	// Returns the result as the GrappleResult enum.
-	int GrappleCargo(int slot = -1);
+	GrappleResult GrappleCargo(int slot = -1);
 
 	// Releases the cargo in the passed slot.
 	// Parameters:
 	//	slot: the slot number. If no slot is passed, the first occupied slot will be used.
 	// Returns the result as the ReleaseResult enum.
-	int ReleaseCargo(int slot = -1);
+	ReleaseResult ReleaseCargo(int slot = -1);
 
-	// Unpacks the cargo in the passed slot.
+	// Unpacks the cargo in the passed slot, or the nearest cargo if no slot is passed.
 	// Parameters:
-	//	slot the slot number. If no slot is passed, the first occupied slot will be used.
-	// Returns the result as the GrappleResult and ReleaseResult enum.
-	int UnpackCargo(int slot = -1);
+	//	slot: the slot number. If no slot is passed, the first occupied slot will be used.
+	//  isAttached: if the cargo must be attached to unpack it. If true, SetUnpackDistance will have no effect.
+	// Returns the result as the ReleaseResult and UnpackResult enum.
+	int UnpackCargo(bool isAttached = false, int slot = -1);
 
 	// Deletes the cargo in the passed slot.
 	// Parameters:
-	//	slot the slot number.
+	//	slot: the slot number.
 	// Returns the delete result as the DeleteResult and ReleaseResult enum.
 	int DeleteCargo(int slot);
 
@@ -121,6 +170,11 @@ public:
 	//	The cargo is empty.
 	//	The slot is empty or undefined.
 	double UseResource(std::string resourceType, double requiredMass, int slot = -1);
+
+	// Returns the cargo information as the CargoInfo struct, or an empty struct if the passed slot is invalid.
+	// Parameters:
+	//	slot: the slot number.
+	CargoInfo GetCargoInfo(int slot);
 
 	// Gets the cargo mass in the passed slot.
 	// Parameters:
@@ -137,20 +191,22 @@ private:
 
 	VESSEL* vessel;
 	std::map<int, ATTACHMENTHANDLE> attachsMap;
+	std::vector<std::string> cargoList;
 
+	int cargoCount;
 	double maxCargoMass;
 	double maxTotalCargoMass;
 	double grappleDistance;
+	double unpackDistance;
 	double releaseVel;
 	double totalCargoMass;
-
 	bool isTotalMassGet;
-
+	
+	void InitCargo();
+	void SetSpawnName(std::string& spawnName);
 	OBJHANDLE VerifySlot(int slot);
 	int GetEmptySlot();
 	std::pair<int, OBJHANDLE> GetOccupiedSlot();
-
 	void GetTotalCargoMass();
-
 	CargoVessel* GetResourceCargo(std::string resourceType);
 };

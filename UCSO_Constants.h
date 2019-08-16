@@ -1,4 +1,5 @@
 #pragma once
+#pragma warning( disable : 26495 )
 #include <string>
 
 enum CargoType {
@@ -7,8 +8,13 @@ enum CargoType {
 	UNPACKABLE
 };
 
+enum UnpackMode {
+	LANDED = 0,
+	DELAYED,
+	MANUAL
+};
+
 struct DataStruct {
-	DataStruct() { type = -1; resourceMass = 0; unpackDelay = 0; unpackMode = -1; };
 	int type;
 
 	std::string resourceType;
