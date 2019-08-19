@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Alpha 4 - 2019-08-19
+### Added
+- Release on the ground.
+- A static cargo example.
+- Normals to the mesh, so as to have the shadows appearing correctly.
+### Changed
+- The repository structure.
+- CargoInfo struct.
+- AddCargo method creates the cargo in the attachment point position, to minimize attachment movement.
+- GrappleCargo method grapples the nearest cargo.
+- Updated touchdown points for Orbiter 2016.
+- Updated attachment point.
+- The cargos config file.
+- The timing algorithm.
+### Fixed
+- GrappleCargo and UnpackCargo method returns error before checking all cargos.
+- Total cargo mass doesn't increase when adding cargo.
+- Total cargo mass doesn't decrese when releasing, unpacking, or deleting cargo.
+
 ## Alpha 3 - 2019-08-16
 ### Added
 - Cargo mesh.

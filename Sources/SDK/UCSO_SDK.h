@@ -58,17 +58,32 @@ public:
 		DELETE_FAILED      // The delete failed.
 	};
 
+	// Cargo type as returned from GetCargoInfo method.
+	enum CargoType {
+		STATIC = 0,
+		RESOURCE,
+		UNPACKABLE
+	};
+
+	// Unpack mode as returned from GetCargoInfo method.
+	enum UnpackMode {
+		LANDED = 0,
+		DELAYED,
+		MANUAL
+	};
+
 	// The cargo information as returned from GetCargoInfo method.
 	struct CargoInfo
 	{
-		const char* type;         // The cargo type: "Static", "Resource", and "Unpackable".
+		bool valid;               // True if the struct contains information, false if not.
+		CargoType type;           // The cargo type as the CargoType enum.
 		double mass;              // The cargo mass in kilograms.
 
 		const char* resourceType; // The resource type
 		double resourceMass;      // The resource mass in kilograms: the cargo mass minus the container mass.
 
 		const char* spawnModule;  // The spawn module
-		const char* unpackMode;   // The unpack mode: "Landed", "Delayed", and "Manual".
+		UnpackMode unpackMode;    // The unpack mode as the UnpackMode enum.
 		int unpackDelay;          // The unpack delay in seconds.
 	};
 
@@ -111,8 +126,13 @@ public:
 
 	// Sets the cargo release velocity if released in space.
 	// Parameters:
-	//	releaseVel: the release velocity in m/s. The default value is 0.05 m/s.
-	void SetReleaseVelocity(double releaseVel);
+	//	releaseVelocity: the release velocity in m/s. The default value is 0.05 m/s.
+	void SetReleaseVelocity(double releaseVelocity);
+
+	// Sets the cargo release distance if released on ground.
+	// Parameters:
+	//	releaseDistance: the release distance in meters. The default value is 5 meters.
+	void SetReleaseDistance(double releaseDistance);
 
 	// Returns the cargo count, which is the number of cargo in Config\Vessels\UCSO folder.
 	// A typical use case:
@@ -198,7 +218,8 @@ private:
 	double maxTotalCargoMass;
 	double grappleDistance;
 	double unpackDistance;
-	double releaseVel;
+	double releaseVelocity;
+	double releaseDistance;
 	double totalCargoMass;
 	bool isTotalMassGet;
 	

@@ -11,22 +11,19 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="$(ProjectName).cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="CargoVessel.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
+    <ClInclude Include="..\CargoVessel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="UCSO_SDK.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="UCSO_Constants.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="UCSO.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="CargoVessel.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
+    <ClCompile Include="UCSO_SDK.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CargoVessel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

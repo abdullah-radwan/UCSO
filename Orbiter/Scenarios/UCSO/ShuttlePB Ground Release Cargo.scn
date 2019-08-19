@@ -1,0 +1,48 @@
+BEGIN_DESC
+UCSO ShuttlePB cargo on the ground, as an unpackable ground release cargo example. Keyboard shortcuts are shown on the HUD.
+END_DESC
+
+BEGIN_ENVIRONMENT
+  System Sol
+  Date MJD 58710.6085962046
+END_ENVIRONMENT
+
+BEGIN_FOCUS
+  Ship ShuttlePB
+END_FOCUS
+
+BEGIN_CAMERA
+  TARGET ShuttlePB
+  MODE Cockpit
+  FOV 50.00
+END_CAMERA
+
+BEGIN_HUD
+  TYPE Surface
+END_HUD
+
+BEGIN_SHIPS
+ShuttlePB:ShuttlePB_UCSO
+  STATUS Landed Earth
+  POS -80.6758980 28.5227620
+  HEADING 134.00
+  ALT 1.287
+  AROT -106.899 -49.444 165.624
+  AFCMODE 7
+  PRPLEVEL 0:1.000000
+  NAVFREQ 0 0
+END
+CargoShuttlePB:UCSO\CargoShuttlePB
+  STATUS Landed Earth
+  POS -16.9794834 22.2416028
+  HEADING 105.61
+  ALT 369610.058
+  AROT 0.000 -0.000 0.000
+  ATTACHED 0:0,ShuttlePB
+  AFCMODE 7
+  NAVFREQ 0 0
+  Landing 0
+  Timing 0
+  Timer 0.000
+END
+END_SHIPS
