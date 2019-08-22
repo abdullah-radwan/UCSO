@@ -5,7 +5,7 @@ VisualStudioVersion = 16.0.29123.88
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "UCSO", "UCSO.vcxproj", "{FDD37414-3C8F-4322-8B45-BAAEC4B23F38}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "UCSO_SDK", "SDK\UCSO_SDK.vcxproj", "{5B63AE34-F829-42AD-A536-F94F2CA19121}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "UCSO_API", "API\UCSO_API.vcxproj", "{5B63AE34-F829-42AD-A536-F94F2CA19121}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

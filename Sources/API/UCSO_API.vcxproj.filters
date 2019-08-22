@@ -14,15 +14,15 @@
     <ClInclude Include="..\CargoVessel.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="UCSO_SDK.h">
+    <ClInclude Include="UCSO_API.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="UCSO_SDK.cpp">
+    <ClCompile Include="..\CargoVessel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\CargoVessel.cpp">
+    <ClCompile Include="UCSO_API.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -75,7 +75,7 @@ std::string CargoVessel::SetSpawnName()
 
 	for (int index = 1; index++;)
 	{
-		std::string spawnName = dataStruct.spawnName.c_str() + std::to_string(index - 1);
+		std::string spawnName = dataStruct.spawnName.c_str() + std::to_string(index);
  		if (!oapiGetVesselByName(&spawnName[0])) return spawnName;
 	}
 

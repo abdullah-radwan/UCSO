@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Alpha 5 - 2019-08-22
+### Added
+- New API methods: SetCargoColumnLength and SetCargoRowLength for the new ground release algorithm.
+- A manual and an API walktrough.
+### Changed
+- Rename SDK to API.
+- Ground release algorithm.
+- Rename API method GetCargoTotalMass to GetTotalCargoMass.
+- Rename API method GetCargoCount to GetAvailableCargoCount.
+- Rename API method GetCargoName to GetAvailableCargoName.
+- Move the attachment point to under the cargo.
+- Meshes and textures structure.
+
 ## Alpha 4 - 2019-08-19
 ### Added
 - Release on the ground.
@@ -44,8 +57,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - DetachChild doesn't apply the passed velocity (Thanks to Woo482).
 ### Changed
-- Rename SDK method 'Init' to 'CreateInstance'.
-- The SDK documentation.
+- Rename API method 'Init' to 'CreateInstance'.
+- The API documentation.
 - Use GroundContact method instead of GetFlightStatus to detect if the vessel is landed..
 - The Visual Studio solution to proper build settings.
 

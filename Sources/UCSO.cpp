@@ -27,6 +27,7 @@ void UCSO::clbkSetClassCaps(FILEHANDLE cfg)
 		oapiReadItem_string(cfg, "SpawnModule", &dataStruct.spawnModule[0]);
 		oapiReadItem_string(cfg, "SpawnName", &dataStruct.spawnName[0]);
 		if (!oapiReadItem_float(cfg, "SpawnHeight", dataStruct.spawnHeight)) dataStruct.spawnHeight = 0;
+		dataStruct.spawnHeight = abs(dataStruct.spawnHeight);
 
 		oapiReadItem_int(cfg, "UnpackMode", dataStruct.unpackMode);
 		if(!oapiReadItem_int(cfg, "UnpackDelay", dataStruct.unpackDelay)) dataStruct.unpackDelay = 0;
@@ -37,7 +38,7 @@ void UCSO::clbkSetClassCaps(FILEHANDLE cfg)
 
 	SetSize(1.3);
 
-	CreateAttachment(true, { 0, 0.65, 0 }, { 0, 1, 0 }, { 0, 0, 1 }, "UCSO");
+	CreateAttachment(true, { 0, -0.65, 0 }, { 0, 1, 0 }, { 0, 0, 1 }, "UCSO");
 
 	double stiffness = -((dataStruct.resourceMass + containerMass) * 9.80655) / (3 * -0.001);
 	double damping = 0.9 * (2 * sqrt((dataStruct.resourceMass + containerMass) * stiffness));
@@ -142,6 +143,7 @@ void UCSO::clbkPreStep(double simt, double simdt, double mjd)
 void UCSO::clbkSaveState(FILEHANDLE scn)
 {
 	VESSEL4::clbkSaveState(scn);
+
 	switch (dataStruct.type)
 	{
 	case RESOURCE:

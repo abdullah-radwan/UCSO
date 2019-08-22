@@ -12,16 +12,16 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\CargoVessel.cpp" />
-    <ClCompile Include="UCSO_SDK.cpp" />
+    <ClCompile Include="UCSO_API.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\CargoVessel.h" />
-    <ClInclude Include="UCSO_SDK.h" />
+    <ClInclude Include="UCSO_API.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{5B63AE34-F829-42AD-A536-F94F2CA19121}</ProjectGuid>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
-    <ProjectName>UCSO_SDK</ProjectName>
+    <ProjectName>UCSO_API</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

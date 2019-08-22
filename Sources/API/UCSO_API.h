@@ -1,13 +1,13 @@
-// ==============================================================
-// UCSO_SDK.h : Defines the Universal Cargo System for Orbiter public SDK.
+// =======================================================================================
+// UCSO_API.h : Defines the Universal Cargo System for Orbiter (UCSO) Alpha 5 public API.
 // 
 // Copyright © 2019 Abdullah Radwan
 // All rights reserved.
 //
-// ==============================================================
+// =======================================================================================
 
 #pragma once
-#include <orbitersdk.h>
+#include <Orbitersdk.h>
 #include <map>
 #include <vector>
 #include "../CargoVessel.h"
@@ -39,6 +39,7 @@ public:
 		CARGO_RELEASED = 0, // The cargo is released successfully. For ReleaseCargo method only.
 		SLOT_EMPTY,         // The passed slot is empty, or all slots are empty if -1 is passed.
 		SLOT_UNDEF,         // The passed slot is undefined, or no slots are defined.
+		NO_EMPTY_POSITION,  // There is no empty position near the vessel for release on the ground. For ReleaseCargo method only.
 		RELEASE_FAILED      // The release failed. For ReleaseCargo method only.
 	};
 
@@ -94,7 +95,7 @@ public:
 	// NOTE: Don't forget to delete the returned object when you no longer need it (e.g., in your vessel's destructor).
 	static UCSO* CreateInstance(VESSEL* vessel);
 
-	// Sets the slot number for a given attachment, to use with the SDK methods. It must be called before any other calls to the SDK.
+	// Sets the slot number for a given attachment, to use with the API methods. It must be called before any other calls to the API.
 	// To delete a slot, pass the slot number and NULL for the attachment handle.
 	// Parameters:
 	//	slot: the slot number. You can use any number but not -1, as it's reserved.
@@ -119,39 +120,60 @@ public:
 	//	grappleDistance: the distance in meters. The default value is 50 meters.
 	void SetMaxGrappleDistance(double grappleDistance);
 
-	// Sets the maximum unpack distance in meters.
-	// Parameters:
-	//	unpackDistance: the distance in meters. The default value is 3 meters.
-	void SetMaxUnpackDistance(double unpackDistance);
-
 	// Sets the cargo release velocity if released in space.
 	// Parameters:
 	//	releaseVelocity: the release velocity in m/s. The default value is 0.05 m/s.
 	void SetReleaseVelocity(double releaseVelocity);
 
-	// Sets the cargo release distance if released on ground.
+	// Sets the cargo release distance if released on the ground.
 	// Parameters:
 	//	releaseDistance: the release distance in meters. The default value is 5 meters.
 	void SetReleaseDistance(double releaseDistance);
 
-	// Returns the cargo count, which is the number of cargo in Config\Vessels\UCSO folder.
-	// A typical use case:
-	// 	for (int cargoIndex = 0;  cargoIndex < GetCargoCount();  cargoIndex++) {
-	//		const char* cargoName = GetCargoName(cargoIndex);
-	//		int addResult = AddCargo(cargoIndex); }
-	int GetCargoCount();
-
-	// Returns the cargo name from the passed index, which is the file name from Config\Vessels\UCSO folder without .cfg
-	//	Or empty string if the index is invalid.
+	// Sets the cargo column length if released on the ground.
 	// Parameters:
-	//	index: the cargo index.
-	const char* GetCargoName(int index);
+	//	columnLength: the cargo column length. The default value is 4 cargo.
+	void SetCargoColumnLength(int columnLength);
+
+	// Sets the cargo row length if released on the ground.
+	// Parameters:
+	//	rowLength: the cargo row length. The default value is 4 cargo.
+	void SetCargoRowLength(int rowLength);
+
+	// Sets the maximum unpack distance in meters.
+	// Parameters:
+	//	unpackDistance: the distance in meters. The default value is 3 meters.
+	void SetMaxUnpackDistance(double unpackDistance);
+
+	// Returns the available cargo count, which is the number of cargoes in Config\Vessels\UCSO folder.
+	int GetAvailableCargoCount();
+
+	// Returns the cargo name from the passed index, which is the filename from Config\Vessels\UCSO folder without .cfg,
+	// or empty string if the index is invalid.
+	// Parameters:
+	//	index: the cargo index. It must equal or be higher than 0 and lower than the available cargo count.
+	const char* GetAvailableCargoName(int index);
+
+	// Returns the cargo information as the CargoInfo struct, or an empty struct if the passed slot is invalid.
+	// Parameters:
+	//	slot: the slot number.
+	CargoInfo GetCargoInfo(int slot);
+
+	// Gets the cargo mass in the passed slot.
+	// Parameters:
+	//	slot: the slot number.
+	// Returns the cargo mass in kilograms, or -1 if the slot is empty or undefined.
+	double GetCargoMass(int slot);
+
+	// Gets the total cargo mass.
+	// Returns the total cargo mass in kilograms.
+	double GetTotalCargoMass();
 
 	// Adds the passed cargo to the passed slot.
 	// Parameters:
-	//	index: the cargo index.
+	//	index: the cargo index. It must equal or be higher than 0 and lower than the available cargo count.
 	//  slot: the slot number. If no slot is passed, the first empty slot will be used.
-	// Returns the result as GrappleResult and AddResult eums.
+	// Returns the result as GrappleResult and AddResult enums.
 	int AddCargo(int index, int slot = -1);
 
 	// Grapples the cargo in the passed slot.
@@ -170,64 +192,55 @@ public:
 	// Parameters:
 	//	slot: the slot number. If no slot is passed, the first occupied slot will be used.
 	//  isAttached: if the cargo must be attached to unpack it. If true, SetUnpackDistance will have no effect.
-	// Returns the result as the ReleaseResult and UnpackResult enum.
+	// Returns the result as the ReleaseResult and UnpackResult enums.
 	int UnpackCargo(bool isAttached = false, int slot = -1);
 
 	// Deletes the cargo in the passed slot.
 	// Parameters:
 	//	slot: the slot number.
-	// Returns the delete result as the DeleteResult and ReleaseResult enum.
+	// Returns the delete result as DeleteResult and ReleaseResult enums.
 	int DeleteCargo(int slot);
 
 	// Uses the available resource in the cargo in the passed slot.
 	// Parameters:
 	//	resourceType: the cargo type (see the standard cargo types in the manual).
 	//	requiredMass: the needed mass in kilograms.
-    //	slot: the slot number. If no slot is passed, the first available cargo will be used.
+	//	slot: the slot number. If no slot is passed, the first available cargo will be used.
 	// Returns the required mass or less based on the available mass, or 0 if:
-    //	The cargo isn't a resource.
+	//	The cargo isn't a resource.
 	//	The cargo resource type doesn't match the passed type.
 	//	The cargo is empty.
 	//	The slot is empty or undefined.
 	double UseResource(std::string resourceType, double requiredMass, int slot = -1);
-
-	// Returns the cargo information as the CargoInfo struct, or an empty struct if the passed slot is invalid.
-	// Parameters:
-	//	slot: the slot number.
-	CargoInfo GetCargoInfo(int slot);
-
-	// Gets the cargo mass in the passed slot.
-	// Parameters:
-	//	slot: the slot number.
-	// Returns the cargo mass in kilograms, or -1 if the slot is empty or undefined.
-	double GetCargoMass(int slot);
-
-	// Gets the total cargo mass.
-	// Returns the total cargo mass in kilograms.
-	double GetCargoTotalMass();
 
 private:
 	UCSO(VESSEL* vessel);
 
 	VESSEL* vessel;
 	std::map<int, ATTACHMENTHANDLE> attachsMap;
-	std::vector<std::string> cargoList;
+	std::vector<std::string> availableCargoList;
 
-	int cargoCount;
 	double maxCargoMass;
 	double maxTotalCargoMass;
 	double grappleDistance;
-	double unpackDistance;
+
 	double releaseVelocity;
+	double columnLength;
+	int rowLength;
 	double releaseDistance;
-	double totalCargoMass;
-	bool isTotalMassGet;
-	
+
+	double unpackDistance;
+
 	void InitCargo();
+
+	std::vector<VECTOR3> SetGroundList();
+	bool GetNearestEmptyLocation(std::vector<VECTOR3> groundList, VECTOR3& initialPos);
+
 	void SetSpawnName(std::string& spawnName);
+
 	OBJHANDLE VerifySlot(int slot);
 	int GetEmptySlot();
 	std::pair<int, OBJHANDLE> GetOccupiedSlot();
-	void GetTotalCargoMass();
+
 	CargoVessel* GetResourceCargo(std::string resourceType);
 };
