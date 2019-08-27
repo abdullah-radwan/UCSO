@@ -1,8 +1,12 @@
 #include "UCSO_API.h"
 #include <filesystem>
 
+void AttachmentException(unsigned int u, EXCEPTION_POINTERS* pExp) { throw; }
+
 UCSO* UCSO::CreateInstance(VESSEL* vessel)
 {
+	_set_se_translator(AttachmentException);
+
 	return new UCSO(vessel);
 }
 
@@ -10,26 +14,63 @@ UCSO::UCSO(VESSEL* vessel)
 {
 	this->vessel = vessel;
 	attachsMap = std::map<int, ATTACHMENTHANDLE>();
+	doorsMap = std::map<int, bool>();
+
+	version = 0;
 
 	maxCargoMass = -1;
 	maxTotalCargoMass = -1;
 	grappleDistance = 50;
+	grappleUnpacked = false;
 
 	releaseVelocity = 0.05;
-	columnLength = 6; // 4 * 1.5
 	rowLength = 4;
-	releaseDistance = 5;
 
 	unpackDistance = 3;
 
 	InitCargo();
+
+	HINSTANCE hinstDLL = LoadLibrary("Modules\\UCSO.dll");
+
+	if (hinstDLL) {
+		typedef double (*GetUCSOBuildPointer)();
+
+		GetUCSOBuildPointer GetUCSOBuild = reinterpret_cast<GetUCSOBuildPointer>(GetProcAddress(hinstDLL, "GetUCSOBuild"));
+
+		if (GetUCSOBuild) version = GetUCSOBuild();
+
+		FreeLibrary(hinstDLL);
+	}
 }
 
-void UCSO::SetSlotAttachment(int slot, ATTACHMENTHANDLE attachmentHandle)
+double UCSO::GetUCSOVersion()
+{
+	return version;
+}
+
+bool UCSO::SetSlotAttachment(int slot, ATTACHMENTHANDLE attachmentHandle, bool opened)
 {
 	// If the passed slot exists and attachment handle is NULL
-	if (attachsMap.find(slot) != attachsMap.end() && !attachmentHandle) attachsMap.erase(slot);
-	else if (attachmentHandle) attachsMap[slot] = attachmentHandle;
+	if (attachsMap.find(slot) != attachsMap.end() && !attachmentHandle) 
+	{
+		attachsMap.erase(slot);
+		doorsMap.erase(slot);
+		return true;
+	}
+	else if (attachmentHandle && CheckAttachment(attachmentHandle)) 
+	{ 
+		attachsMap[slot] = attachmentHandle;
+		doorsMap[slot] = opened;
+		return true;
+	}
+
+	return false;
+}
+
+void UCSO::SetSlotDoor(bool opened, int slot)
+{
+	if(slot == -1) for (auto const& [slot, opened] : doorsMap) doorsMap[slot] = opened;
+	else if(doorsMap.find(slot) != doorsMap.end()) doorsMap[slot] = opened;
 }
 
 void UCSO::SetMaxCargoMass(double maxCargoMass)
@@ -47,19 +88,14 @@ void UCSO::SetMaxGrappleDistance(double grappleDistance)
 	this->grappleDistance = grappleDistance;
 }
 
+void UCSO::SetUnpackedGrapple(bool grappleUnpacked)
+{
+	this->grappleUnpacked = grappleUnpacked;
+}
+
 void UCSO::SetReleaseVelocity(double releaseVelocity)
 {
 	this->releaseVelocity = releaseVelocity;
-}
-
-void UCSO::SetReleaseDistance(double releaseDistance)
-{
-	this->releaseDistance = releaseDistance;
-}
-
-void UCSO::SetCargoColumnLength(int columnLength)
-{
-	this->columnLength = columnLength * 1.5;
 }
 
 void UCSO::SetCargoRowLength(int rowLength)
@@ -94,6 +130,7 @@ UCSO::CargoInfo UCSO::GetCargoInfo(int slot)
 	struct CargoVessel::DataStruct dataStruct = cargoVessel->GetDataStruct();
 
 	cargoInfo.valid = true;
+	cargoInfo.name = cargoVessel->GetName();
 	cargoInfo.type = static_cast<CargoType>(dataStruct.type);
 	cargoInfo.mass = cargoVessel->GetMass();
 
@@ -101,12 +138,19 @@ UCSO::CargoInfo UCSO::GetCargoInfo(int slot)
 	{
 	case RESOURCE:
 		cargoInfo.resourceType = _strdup(dataStruct.resourceType.c_str());
-		cargoInfo.resourceMass = dataStruct.resourceMass;
+		cargoInfo.resourceMass = dataStruct.netMass;
+
 		break;
 	case UNPACKABLE:
-		cargoInfo.spawnModule = _strdup(dataStruct.spawnModule.c_str());
-		cargoInfo.unpackMode = static_cast<UnpackMode>(dataStruct.unpackMode);
-		if (cargoInfo.unpackMode == DELAYED) cargoInfo.unpackDelay = dataStruct.unpackDelay;
+		cargoInfo.unpackType = static_cast<UnpackType>(dataStruct.unpackType);
+
+		if (cargoInfo.unpackType == ORBITER_VESSEL) 
+		{
+			cargoInfo.spawnModule = _strdup(dataStruct.spawnModule.c_str());
+			cargoInfo.unpackMode = static_cast<UnpackMode>(dataStruct.unpackMode);
+			if (cargoInfo.unpackMode == DELAYED) cargoInfo.unpackDelay = dataStruct.unpackDelay;
+		}
+
 		break;
 	default:
 		break;
@@ -117,7 +161,7 @@ UCSO::CargoInfo UCSO::GetCargoInfo(int slot)
 
 double UCSO::GetCargoMass(int slot)
 {
-	if (attachsMap.empty() || attachsMap.find(slot) == attachsMap.end()) return -1;
+	if (attachsMap.empty() || attachsMap.find(slot) == attachsMap.end() || !CheckAttachment(attachsMap[slot])) return -1;
 
 	OBJHANDLE cargoHandle = VerifySlot(slot);
 	if (!cargoHandle) return -1;
@@ -129,7 +173,9 @@ double UCSO::GetTotalCargoMass()
 {
 	double totalCargoMass = 0;
 
-	for (auto const& [slot, attachmetHandle] : attachsMap) {
+	for (auto const& [slot, attachmetHandle] : attachsMap) 
+	{
+		if (!CheckAttachment(attachsMap[slot])) continue;
 		OBJHANDLE cargo = VerifySlot(slot);
 		if (cargo) totalCargoMass += oapiGetMass(cargo);
 	}
@@ -140,13 +186,15 @@ double UCSO::GetTotalCargoMass()
 int UCSO::AddCargo(int index, int slot)
 {
 	if (index < 0 || index >= static_cast<int>(availableCargoList.size())) return INVALID_INDEX;
-	else if (attachsMap.empty()) return SLOT_UNDEFINED;
-	else if (slot == -1) {
+	else if (attachsMap.empty()) return GRAPPLE_SLOT_UNDEFINED;
+	else if (slot == -1)
+	{
 		slot = GetEmptySlot();
-		if (slot == -1) return SLOT_OCCUPIED;
+		if (slot == -1) return GRAPPLE_SLOT_OCCUPIED;
 	}
-	else if (attachsMap.find(slot) == attachsMap.end()) return SLOT_UNDEFINED;
-	else if (VerifySlot(slot)) return SLOT_OCCUPIED;
+	else if (attachsMap.find(slot) == attachsMap.end() || !CheckAttachment(attachsMap[slot])) return GRAPPLE_SLOT_UNDEFINED;
+	else if (!doorsMap[slot]) return GRAPPLE_SLOT_CLOSED;
+	else if (VerifySlot(slot)) return GRAPPLE_SLOT_OCCUPIED;
 
 	std::string spawnName = availableCargoList[index];
 	SetSpawnName(spawnName);
@@ -178,29 +226,32 @@ int UCSO::AddCargo(int index, int slot)
 
 UCSO::GrappleResult UCSO::GrappleCargo(int slot)
 {
-	if (attachsMap.empty()) return SLOT_UNDEFINED;
+	if (attachsMap.empty()) return GRAPPLE_SLOT_UNDEFINED;
 
-	else if (slot == -1) {
+	else if (slot == -1) 
+	{
 		slot = GetEmptySlot();
-		if (slot == -1) return SLOT_OCCUPIED;
+		if (slot == -1) return GRAPPLE_SLOT_OCCUPIED;
 	}
-	else if (attachsMap.find(slot) == attachsMap.end()) return SLOT_UNDEFINED;
-	else if (VerifySlot(slot)) return SLOT_OCCUPIED;
+	else if (attachsMap.find(slot) == attachsMap.end() || !CheckAttachment(attachsMap[slot])) return GRAPPLE_SLOT_UNDEFINED;
+	else if (VerifySlot(slot)) return GRAPPLE_SLOT_OCCUPIED;
 
-	std::map<double, VESSEL*> cargoMap;
+	std::map<double, CargoVessel*> cargoMap;
 	GrappleResult result = NO_CARGO_IN_RANGE;
 
 	for (DWORD vesselIndex = 0; vesselIndex < oapiGetVesselCount(); vesselIndex++)
 	{
 		VESSEL* cargo = oapiGetVesselInterface(oapiGetVesselByIndex(vesselIndex));
 
-		if (strncmp(cargo->GetClassNameA(), "UCSO", 4) == 0) {
+		if (strncmp(cargo->GetClassNameA(), "UCSO", 4) == 0) 
+		{
 			VECTOR3 pos;
 			vessel->GetRelativePos(cargo->GetHandle(), pos);
 
 			double distance = length(pos);
-			if (distance <= grappleDistance) {
-				
+
+			if (distance <= grappleDistance) 
+			{
 				if (cargo->GetAttachmentStatus(cargo->GetAttachmentHandle(true, 0))) continue;
 
 				if (maxCargoMass != -1) if (cargo->GetMass() > maxCargoMass) { result = MAX_MASS_EXCEEDED; continue; }
@@ -208,17 +259,21 @@ UCSO::GrappleResult UCSO::GrappleCargo(int slot)
 				if (maxTotalCargoMass != -1)
 					if (GetTotalCargoMass() + cargo->GetMass() > maxTotalCargoMass) { result = MAX_TOTAL_MASS_EXCEEDED; continue; }
 
-				cargoMap[distance] = cargo;
+				CargoVessel* vCargo = static_cast<CargoVessel*>(cargo);
+				struct CargoVessel::DataStruct dataStruct = vCargo->GetDataStruct();
+
+				if(grappleUnpacked || !dataStruct.unpacked) cargoMap[distance] = vCargo;
 			}
 		}
 	}
 
 	if (cargoMap.empty()) return result;
 
-	for (auto const& [distance, cargo] : cargoMap) {
-		if (vessel->AttachChild(cargo->GetHandle(), attachsMap[slot], cargo->GetAttachmentHandle(true, 0))) {
-			CargoVessel* vCargo = static_cast<CargoVessel*>(cargo);
-			vCargo->SetAttachmentState(true);
+	for (auto const& [distance, cargo] : cargoMap) 
+	{
+		if (vessel->AttachChild(cargo->GetHandle(), attachsMap[slot], cargo->GetAttachmentHandle(true, 0))) 
+		{
+			cargo->SetAttachmentState(true);
 			return CARGO_GRAPPLED;
 		}
 	}
@@ -228,25 +283,27 @@ UCSO::GrappleResult UCSO::GrappleCargo(int slot)
 
 UCSO::ReleaseResult UCSO::ReleaseCargo(int slot)
 {
-	if (attachsMap.empty()) return SLOT_UNDEF;
+	if (attachsMap.empty()) return RELEASE_SLOT_UNDEFINED;
 
 	std::pair<int, OBJHANDLE> pair;
 
 	if (slot == -1) {
 		pair = GetOccupiedSlot();
-		if (!pair.second) return SLOT_EMPTY;
+		if (!pair.second) return RELEASE_SLOT_EMPTY;
 		slot = pair.first;
 	}
 	// If the slot doesn't exists
-	else if (attachsMap.find(slot) == attachsMap.end()) return SLOT_UNDEF;
+	else if (attachsMap.find(slot) == attachsMap.end() || !CheckAttachment(attachsMap[slot])) return RELEASE_SLOT_UNDEFINED;
+	else if (!doorsMap[slot]) return RELEASE_SLOT_CLOSED;
 	else {
 		pair.second = VerifySlot(slot);
-		if (!pair.second) return SLOT_EMPTY;
+		if (!pair.second) return RELEASE_SLOT_EMPTY;
 	}
 
 	CargoVessel* cargo = static_cast<CargoVessel*>(oapiGetVesselInterface(pair.second));
 
-	if (vessel->GetFlightStatus() & 1) {
+	if (vessel->GetFlightStatus() & 1) 
+	{
 		VESSELSTATUS2 status;
 		memset(&status, 0, sizeof(status));
 		status.version = 2;
@@ -261,16 +318,7 @@ UCSO::ReleaseResult UCSO::ReleaseCargo(int slot)
 		status.surf_lng += (pos.x / metersPerDegree) * RAD;
 		status.surf_lat += (pos.z / metersPerDegree) * RAD;
 
-		MATRIX3 rot1 = CargoVessel::RotationMatrix({ 0 * RAD, 90 * RAD - status.surf_lng, 0 * RAD });
-		MATRIX3 rot2 = CargoVessel::RotationMatrix({ -status.surf_lat + 0 * RAD, 0, 0 * RAD });
-		MATRIX3 rot3 = CargoVessel::RotationMatrix({ 0, 0, 180 * RAD + status.surf_hdg });
-		MATRIX3 rot4 = CargoVessel::RotationMatrix({ 90 * RAD, 0, 0 });
-		MATRIX3 RotMatrix_Def = mul(rot1, mul(rot2, mul(rot3, rot4)));
-
-		status.arot.x = atan2(RotMatrix_Def.m23, RotMatrix_Def.m33);
-		status.arot.y = -asin(RotMatrix_Def.m13);
-		status.arot.z = atan2(RotMatrix_Def.m12, RotMatrix_Def.m11);
-		status.vrot.x = 0.65;
+		CargoVessel::SetGroundRotation(status, 0.65);
 
 		if (vessel->DetachChild(attachsMap[slot])) cargo->DefSetStateEx(&status);
 		else return RELEASE_FAILED;
@@ -282,72 +330,76 @@ UCSO::ReleaseResult UCSO::ReleaseCargo(int slot)
 	return CARGO_RELEASED;
 }
 
-int UCSO::UnpackCargo(bool isAttached, int slot)
+bool UCSO::PackCargo()
 {
-	if (isAttached) {
-		if (attachsMap.empty()) return SLOT_UNDEF;
+	for (DWORD vesselIndex = 0; vesselIndex < oapiGetVesselCount(); vesselIndex++)
+	{
+		VESSEL* cargo = oapiGetVesselInterface(oapiGetVesselByIndex(vesselIndex));
 
-		OBJHANDLE cargoHandle;
-		if (slot == -1) {
-			cargoHandle = GetOccupiedSlot().second;
-			if (!cargoHandle) return SLOT_EMPTY;
-		}
-		else if (attachsMap.find(slot) == attachsMap.end()) return SLOT_UNDEF;
-		else {
-			cargoHandle = VerifySlot(slot);
-			if (!cargoHandle) return SLOT_EMPTY;
-		}
-
-		CargoVessel* cargo = static_cast<CargoVessel*>(oapiGetVesselInterface(cargoHandle));
-		struct CargoVessel::DataStruct dataStruct = cargo->GetDataStruct();
-
-		if (dataStruct.type != UNPACKABLE) return NOT_UNPACKABLE;
-		else if (!cargo->UnpackCargo()) return UNPACK_FAILED;
-
-		return CARGO_UNPACKED;
-	}
-	else {
-		std::map<double, CargoVessel*> cargoMap;
-
-		for (DWORD vesselIndex = 0; vesselIndex < oapiGetVesselCount(); vesselIndex++)
+		if (strncmp(cargo->GetClassNameA(), "UCSO", 4) == 0) 
 		{
-			VESSEL* cargo = oapiGetVesselInterface(oapiGetVesselByIndex(vesselIndex));
+			VECTOR3 pos;
+			vessel->GetRelativePos(cargo->GetHandle(), pos);
 
-			if (strncmp(cargo->GetClassNameA(), "UCSO", 4) == 0) {
-				VECTOR3 pos;
-				vessel->GetRelativePos(cargo->GetHandle(), pos);
+			if (length(pos) <= unpackDistance) 
+			{
+				if (cargo->GetAttachmentStatus(cargo->GetAttachmentHandle(true, 0))) continue;
 
-				double distance = length(pos);
-				if (distance <= unpackDistance) { 
-					OBJHANDLE attachedVessel = cargo->GetAttachmentStatus(cargo->GetAttachmentHandle(true, 0));
-					if (attachedVessel && attachedVessel != vessel->GetHandle()) continue;
+				CargoVessel* vCargo = static_cast<CargoVessel*>(cargo);
+				struct CargoVessel::DataStruct dataStruct = vCargo->GetDataStruct();
 
-					CargoVessel* vCargo = static_cast<CargoVessel*>(cargo);
-					struct CargoVessel::DataStruct dataStruct = vCargo->GetDataStruct();
-
-					if (dataStruct.type == UNPACKABLE) cargoMap[distance] = vCargo;
-				}
+				if (dataStruct.unpacked) { vCargo->PackCargo(); return true; }
 			}
 		}
-
-		if (cargoMap.empty()) return NO_UNPACKABLE_IN_RANGE;
-
-		for (auto const& [distance, cargo] : cargoMap) if (cargo->UnpackCargo()) return CARGO_UNPACKED;
-
-		return UNPACK_FAILED;
 	}
+
+	return false;
+}
+
+UCSO::UnpackResult UCSO::UnpackCargo()
+{
+	std::map<double, CargoVessel*> cargoMap;
+
+	for (DWORD vesselIndex = 0; vesselIndex < oapiGetVesselCount(); vesselIndex++)
+	{
+		VESSEL* cargo = oapiGetVesselInterface(oapiGetVesselByIndex(vesselIndex));
+
+		if (strncmp(cargo->GetClassNameA(), "UCSO", 4) == 0) 
+		{
+			VECTOR3 pos;
+			vessel->GetRelativePos(cargo->GetHandle(), pos);
+
+			double distance = length(pos);
+			if (distance <= unpackDistance) 
+			{
+				if (cargo->GetAttachmentStatus(cargo->GetAttachmentHandle(true, 0))) continue;
+
+				CargoVessel* vCargo = static_cast<CargoVessel*>(cargo);
+				struct CargoVessel::DataStruct dataStruct = vCargo->GetDataStruct();
+
+				if (dataStruct.type == UNPACKABLE && !dataStruct.unpacked) cargoMap[distance] = vCargo;
+			}
+		}
+	}
+
+	if (cargoMap.empty()) return NO_UNPACKABLE_IN_RANGE;
+
+	for (auto const& [distance, cargo] : cargoMap) if (cargo->UnpackCargo()) return CARGO_UNPACKED;
+
+	return UNPACK_FAILED;
 }
 
 int UCSO::DeleteCargo(int slot)
 {
-	if (attachsMap.empty()) return SLOT_UNDEF;
+	if (attachsMap.empty()) return RELEASE_SLOT_UNDEFINED;
 
 	OBJHANDLE cargoHandle;
 
-	if (attachsMap.find(slot) == attachsMap.end()) return SLOT_UNDEF;
-	else {
+	if (attachsMap.find(slot) == attachsMap.end() || !CheckAttachment(attachsMap[slot])) return RELEASE_SLOT_UNDEFINED;
+	else 
+	{
 		cargoHandle = VerifySlot(slot);
-		if (!cargoHandle) return SLOT_EMPTY;
+		if (!cargoHandle) return RELEASE_SLOT_EMPTY;
 	}
 
 	double cargoMass = oapiGetMass(cargoHandle);
@@ -361,12 +413,15 @@ double UCSO::UseResource(std::string resourceType, double requiredMass, int slot
 	if (attachsMap.empty() || requiredMass <= 0 || resourceType.empty()) return 0;
 
 	CargoVessel* cargo;
-	if (slot == -1) {
+
+	if (slot == -1) 
+	{
 		cargo = GetResourceCargo(resourceType);
 		if (!cargo) return 0;
 	}
-	else if (attachsMap.find(slot) == attachsMap.end()) return 0;
-	else {
+	else if (attachsMap.find(slot) == attachsMap.end() || !CheckAttachment(attachsMap[slot])) return 0;
+	else 
+	{
 		OBJHANDLE cargoHandle = VerifySlot(slot);
 		if (!cargoHandle) return 0;
 		cargo = static_cast<CargoVessel*>(oapiGetVesselInterface(cargoHandle));
@@ -378,10 +433,17 @@ double UCSO::UseResource(std::string resourceType, double requiredMass, int slot
 void UCSO::InitCargo()
 {
 	for (const std::filesystem::directory_entry& entry :
-					std::filesystem::directory_iterator(std::filesystem::current_path().string() + "\\Config\\Vessels\\UCSO")) {
+					std::filesystem::directory_iterator(std::filesystem::current_path().string() + "\\Config\\Vessels\\UCSO")) 
+	{
 		std::string path = entry.path().filename().string();
 		availableCargoList.push_back(path.substr(0, path.find(".cfg")));
 	}
+}
+
+bool UCSO::CheckAttachment(ATTACHMENTHANDLE attachHandle)
+{
+	try { vessel->GetAttachmentIndex(attachHandle); return true; }
+	catch (...) { return false; }
 }
 
 std::vector<VECTOR3> UCSO::SetGroundList()
@@ -392,14 +454,14 @@ std::vector<VECTOR3> UCSO::SetGroundList()
 	{
 		VESSEL* cargo = oapiGetVesselInterface(oapiGetVesselByIndex(vesselIndex));
 
-		if (strncmp(cargo->GetClassNameA(), "UCSO", 4) == 0) {
+		if (strncmp(cargo->GetClassNameA(), "UCSO", 4) == 0) 
+		{
 			VECTOR3 cargoPos;
 
 			cargo->GetGlobalPos(cargoPos);
 			vessel->Global2Local(cargoPos, cargoPos);
 
-			if (cargoPos.x <= (columnLength + releaseDistance) && cargoPos.x >= releaseDistance - 1.5
-				&& cargoPos.z <= rowLength) groundList.push_back(cargoPos);
+			if (cargoPos.x <= 11 && cargoPos.x >= 3.5 && cargoPos.z <= rowLength) groundList.push_back(cargoPos);
 		}
 	}
 
@@ -408,19 +470,21 @@ std::vector<VECTOR3> UCSO::SetGroundList()
 
 bool UCSO::GetNearestEmptyLocation(std::vector<VECTOR3> groundList, VECTOR3& initialPos)
 {
-	initialPos.x += releaseDistance;
+	initialPos.x += 5;
 	double length = 0;
 	VECTOR3 pos = initialPos;
 
 loop:
-	for (VECTOR3 cargoPos : groundList) {
-		VECTOR3 difference = cargoPos - pos;
-		double distance = difference.x * difference.x + difference.z * difference.z;
-		if (distance < 1) {
+	for (VECTOR3 cargoPos : groundList) 
+	{
+		VECTOR3 subtract = pos - cargoPos;
+
+		if (sqrt(subtract.x * subtract.x + subtract.z * subtract.z) < 1)
+		{
 			pos = initialPos;
 			length += 1.5;
-			pos.z += static_cast<int>(length / columnLength) * 1.5;
-			pos.x += length - (static_cast<int>(length / columnLength) * columnLength);
+			pos.z += static_cast<int>(length / 6) * 1.5;
+			pos.x += length - (static_cast<int>(length / 6) * 6.0);
 			goto loop;
 		}
 	}
@@ -428,12 +492,14 @@ loop:
 	if (pos.z > rowLength) return false;
 
 	initialPos = pos;
+
 	return true;
 }
 
 void UCSO::SetSpawnName(std::string& spawnName)
 {
-	if (oapiGetVesselByName(&spawnName[0])) {
+	if (oapiGetVesselByName(&spawnName[0])) 
+	{
 		for (int index = 1; index++;)
 		{
 			std::string name = spawnName.c_str() + std::to_string(index);
@@ -449,24 +515,37 @@ OBJHANDLE UCSO::VerifySlot(int slot)
 
 int UCSO::GetEmptySlot()
 {
-	for (auto const& [slot, attachmentHandle] : attachsMap) if (!VerifySlot(slot)) return slot;
+	for (auto const& [slot, attachmentHandle] : attachsMap) 
+	{ 
+		if (!CheckAttachment(attachmentHandle)) continue;
+		if (!VerifySlot(slot)) return slot;
+	}
 	return -1;
 }
 
 std::pair<int, OBJHANDLE> UCSO::GetOccupiedSlot()
 {
-	for (auto const& [slot, attachmetHandle] : attachsMap) if (VerifySlot(slot)) return { slot, VerifySlot(slot) };
+	for (auto const& [slot, attachmentHandle] : attachsMap)
+	{ 
+		if (!CheckAttachment(attachmentHandle)) continue;
+		if (VerifySlot(slot)) return { slot, VerifySlot(slot) };
+	}
 	return { -1, NULL };
 }
 
 CargoVessel* UCSO::GetResourceCargo(std::string resourceType)
 {
-	for (auto const& [slot, attachmetHandle] : attachsMap) {
+	for (auto const& [slot, attachmentHandle] : attachsMap)
+	{
+		if (!CheckAttachment(attachmentHandle)) continue;
+
 		OBJHANDLE cargoHandle = VerifySlot(slot);
-		if (cargoHandle) {
+
+		if (cargoHandle) 
+		{
 			CargoVessel* cargo = static_cast<CargoVessel*>(oapiGetVesselInterface(cargoHandle));
 			struct CargoVessel::DataStruct dataStruct = cargo->GetDataStruct();
-			if (dataStruct.type == RESOURCE && dataStruct.resourceMass > 0 &&
+			if (dataStruct.type == RESOURCE && dataStruct.netMass > 0 &&
 				_strcmpi(dataStruct.resourceType.c_str(), resourceType.c_str()) == 0) return cargo;
 		}
 	}

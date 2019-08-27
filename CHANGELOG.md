@@ -4,6 +4,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Alpha 6 - 2019-08-27
+### Added
+- Packable cargoes, with solar panel and table chair cargo as examples.
+- Doors to the slots. Can be opened and closed.
+- 2 cargo containers meshes.
+- New API method: GetVersion to get the UCSO version. Can be used to verify if UCSO is installed.
+- New API method: SetUnpackedGrapple to set if the cargo can be grappled if it's unpacked.
+- Additional information to CargoInfo struct.
+- Checks in API methods for invalid attachment handles.
+- Cargo status is set to landed if it contacted the ground.
+- Orbiter crashes if one of the cargo paramateres are missing, with an error message in the log.
+- 'EnableFocus' option to the configurations file.
+### Changed
+- Cargoes are no longer unpackable if they are attached.
+- Cargoes can't be grappled if they are unpacked unless set by API method SetUnpackedGrapple.
+- SetSlotAttachment method returns boolean to indicate the operation result.
+- GrappleResult and ReleaseResult enums.
+- Cargoes can't have focus on them.
+- Renamed the default mesh from 'UCSO_Cargo' to 'UCSO_Cargo1'.
+- Configuration file propery 'MeshName' renamed to 'CargoMesh'.
+### Removed
+- API method SetCargoColumnLength due to some accuracy problems with Orbiter SDK.
+- 'DisplayMessage' option from the configurations file.
+
 ## Alpha 5 - 2019-08-22
 ### Added
 - New API methods: SetCargoColumnLength and SetCargoRowLength for the new ground release algorithm.
