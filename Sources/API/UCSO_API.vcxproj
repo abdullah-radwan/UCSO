@@ -87,6 +87,7 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
       <EnableModules>
       </EnableModules>
+      <ExceptionHandling>Async</ExceptionHandling>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
