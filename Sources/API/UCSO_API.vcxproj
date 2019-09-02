@@ -11,11 +11,11 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\CargoVessel.cpp" />
     <ClCompile Include="UCSO_API.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\CargoVessel.h" />
+    <ClInclude Include="..\CargoInterface.h" />
+    <ClInclude Include="UCSO.h" />
     <ClInclude Include="UCSO_API.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
@@ -64,12 +64,12 @@
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <TargetName>$(ProjectName)</TargetName>
+    <TargetName>UCSO</TargetName>
     <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(WindowsSdkDir)\include</IncludePath>
     <OutDir>$(SDKLibDir)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <TargetName>$(ProjectName)</TargetName>
+    <TargetName>UCSO</TargetName>
     <OutDir>$(SDKLibDir)\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">

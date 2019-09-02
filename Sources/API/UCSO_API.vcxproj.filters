@@ -11,17 +11,17 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\CargoVessel.h">
+    <ClInclude Include="UCSO_API.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="UCSO_API.h">
+    <ClInclude Include="..\CargoInterface.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="UCSO.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\CargoVessel.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="UCSO_API.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

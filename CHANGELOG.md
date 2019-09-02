@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Alpha 7 - 2019-09-02
+### Added
+- Source code comments.
+- Egypt, US, Europe, China, Russia, and India flags.
+### Changed
+- Initial spawn name to start with 1.
+- The API header and library to 'UCSO'.
+- The API header to be C++ interface.
+
 ## Alpha 6 - 2019-08-27
 ### Added
 - Packable cargoes, with solar panel and table chair cargo as examples.

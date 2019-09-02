@@ -134,10 +134,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="$(ProjectName).cpp" />
-    <ClCompile Include="CargoVessel.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="CargoVessel.h" />
+    <ClInclude Include="CargoInterface.h" />
     <ClInclude Include="UCSO.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

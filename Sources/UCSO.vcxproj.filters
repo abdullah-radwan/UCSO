@@ -14,15 +14,12 @@
     <ClCompile Include="$(ProjectName).cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="CargoVessel.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="UCSO.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="CargoVessel.h">
+    <ClInclude Include="CargoInterface.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
