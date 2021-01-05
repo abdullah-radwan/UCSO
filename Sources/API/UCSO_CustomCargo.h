@@ -1,6 +1,6 @@
 // =======================================================================================
-// UCSO::CustomCargo.h : Defines the Universal Cargo System for Orbiter (UCSO) 1.0 custom cargo's public API.
-// Copyright © 2020 Abdullah Radwan. All rights reserved.
+// UCSO_CustomCargo.h : Defines the Universal Cargo System for Orbiter (UCSO) 1.0.1 custom cargo's public API.
+// Copyright © 2020-2021 Abdullah Radwan. All rights reserved.
 //
 // This file is part of UCSO.
 //

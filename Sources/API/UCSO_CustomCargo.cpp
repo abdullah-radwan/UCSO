@@ -1,6 +1,6 @@
 // =======================================================================================
 // UCSO::CustomCargo.cpp : The custom cargo's public API class.
-// Copyright © 2020 Abdullah Radwan. All rights reserved.
+// Copyright © 2020-2021 Abdullah Radwan. All rights reserved.
 //
 // This file is part of UCSO.
 //

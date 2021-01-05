@@ -1,6 +1,6 @@
 // =======================================================================================
-// UCSO_Vessel.h : Defines the Universal Cargo System for Orbiter (UCSO) vessel's 1.0 public API.
-// Copyright © 2020 Abdullah Radwan. All rights reserved.
+// UCSO_Vessel.h : Defines the Universal Cargo System for Orbiter (UCSO) vessel's 1.0.1 public API.
+// Copyright © 2020-2021 Abdullah Radwan. All rights reserved.
 //
 // This file is part of UCSO.
 //

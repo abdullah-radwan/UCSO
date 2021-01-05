@@ -1,6 +1,6 @@
 // =======================================================================================
 // XR2_UCSOPlatform.cpp : The platform class.
-// Copyright © 2020 Abdullah Radwan. All rights reserved.
+// Copyright © 2020-2021 Abdullah Radwan. All rights reserved.
 //
 // This file is part of UCSO.
 //
@@ -20,27 +20,7 @@
 // =======================================================================================
 
 #include "XR2_UCSOPlatform.h"
-#include <OrbiterSoundSDK40.h>
 #include <sstream>
-
-TOUCHDOWNVTX XR2_UCSOPlatform::tdvtx[11] =
-{
-	{ { 0, -0.8096, 2.5 }, 2e4, 1e3, 3.0 },
-	{ { -1.5, -0.8096, -2.5 }, 2e4, 1e3, 3.0 },
-	{ { 1.5, -0.8096, -2.5 }, 2e4, 1e3, 3.0 },
-
-	{ { -1.5, -0.6096, -2.5 }, 2e4, 1e3, 3.0 },
-	{ { 1.5, -0.6096, -2.5 }, 2e4, 1e3, 3.0 },
-
-	{ { -1.47323, 0.69297, -2.47454 }, 2e4, 1e3, 3.0 },
-	{ { 1.47323, 0.69297, -2.47454 }, 2e4, 1e3, 3.0 },
-
-	{ { -1.5, -0.6096, 2.5 }, 2e4, 1e3, 3.0 },
-	{ { 1.5, -0.6096, 2.5 }, 2e4, 1e3, 3.0 },
-
-	{ { -1.47323, 0.69297, 2.47454 }, 2e4, 1e3, 3.0 },
-	{ { 1.47323, 0.69297, 2.47454 }, 2e4, 1e3, 3.0 }
-};
 
 DLLCLBK VESSEL* ovcInit(OBJHANDLE hvessel, int flightmodel) { return new XR2_UCSOPlatform(hvessel, flightmodel); }
 
@@ -58,7 +38,7 @@ XR2_UCSOPlatform::~XR2_UCSOPlatform() { delete ucso; delete xrSound; }
 
 void XR2_UCSOPlatform::clbkSetClassCaps(FILEHANDLE cfg)
 {
-	SetTouchdownPoints(tdvtx, 11);
+	SetTouchdownPoints(tdVtx, 11);
 
 	oapiReadItem_bool(cfg, "RealismMode", realismMode);
 
@@ -80,7 +60,7 @@ void XR2_UCSOPlatform::clbkPostCreation()
 { 
 	xr2AttachHandle = GetAttachmentHandle(true, 0);
 
-	xrSound = new DynamicXRSound(this);
+	xrSound = XRSound::CreateInstance(this);
 
 	xrSound->LoadWav(SFX_BAY_DOORS_CLOSED, "XRSound\\Default\\Bay Doors Are Closed.wav", XRSound::InternalOnly);
 	xrSound->LoadWav(SFX_SLOT_EMPTY, "XRSound\\Default\\Slot is Empty.wav", XRSound::InternalOnly);
@@ -108,6 +88,189 @@ void XR2_UCSOPlatform::clbkPreStep(double simt, double simdt, double mjd)
 		if (XRVesselCtrl::IsXRVesselCtrl(vessel) && _strcmpi(vessel->GetClassNameA(), "XR2Ravenstar") == 0)
 			xr2Vessel = static_cast<XRVesselCtrl*>(vessel);
 	}
+}
+
+bool XR2_UCSOPlatform::clbkDrawHUD(int mode, const HUDPAINTSPEC* hps, oapi::Sketchpad* skp)
+{
+	// Draw the default HUD (Surface, Orbit, etc...)
+	VESSEL4::clbkDrawHUD(mode, hps, skp);
+
+	// Determine the screen ratio
+	int s = hps->H;
+	double d = s * 0.00130208;
+	int sw = hps->W;
+	int lw = static_cast<int>(16 * sw / 1024);
+	int x = 0;
+	if (s / sw < 0.7284) x = (lw * 10) + 10;
+	int y = static_cast<int>((168 * d) + (-88 * d));
+
+	// Set the color to green
+	skp->SetTextColor(0x0066FF66);
+
+	sprintf(buffer, "Selected slot to use: %d", slotIndex + 1);
+	skp->Text(x, y, buffer, strlen(buffer));
+	y += 20;
+
+	sprintf(buffer, "Selected cargo to add: %s", ucso->GetAvailableCargoName(cargoIndex));
+	skp->Text(x, y, buffer, strlen(buffer));
+	y += 20;
+
+	sprintf(buffer, "Selected tank to drain fuel to: %s", fuelIndex == 2 ? "SCRAM" : fuelIndex == 1 ? "RCS" : "Main");
+	skp->Text(x, y, buffer, strlen(buffer));
+	y += 36;
+
+	skp->Text(x, y, "S = Select a slot to use", 24);
+	y += 20;
+
+	skp->Text(x, y, "Shift + S = Select a cargo to add", 33);
+	y += 20;
+
+	skp->Text(x, y, "F = Select a tank to drain fuel to", 34);
+	y += 20;
+
+	skp->Text(x, y, "Shift + A = Add the selected cargo", 34);
+	y += 20;
+
+	skp->Text(x, y, "Shift + G = Grapple the nearest cargo", 37);
+	y += 20;
+
+	skp->Text(x, y, "Shift + R = Release the grappled cargo", 38);
+	y += 20;
+
+	skp->Text(x, y, "Shift + F = Drain the nearest fuel resource", 43);
+	y += 20;
+
+	skp->Text(x, y, "Shift + D = Delete the grappled cargo", 37);
+
+	// Display the message if the timer is below 5
+	if (timer < 5) { y += 36; skp->Text(x, y, message, strlen(message)); }
+
+	y += 36;
+	skp->Text(x, y, "Cargoes information", 19);
+	y += 20;
+
+	int cargoesCount = 0;
+	double totalMass = 0;
+
+	for (int slot = 0; slot < 6; slot++)
+	{
+		OBJHANDLE slotCargo = GetAttachmentStatus(cargoSlots[slot]);
+		if (!slotCargo) continue;
+
+		cargoesCount++;
+		totalMass += oapiGetMass(slotCargo);
+	}
+
+	sprintf(buffer, "Cargoes count: %d/6", cargoesCount);
+	skp->Text(x, y, buffer, strlen(buffer));
+	y += 20;
+
+	sprintf(buffer, "Total cargoes mass: %gkg", totalMass);
+	skp->Text(x, y, buffer, strlen(buffer));
+
+	UCSO::Vessel::CargoInfo cargoInfo = ucso->GetCargoInfo(slotIndex);
+	if (!cargoInfo.valid) return true;
+
+	y += 36;
+	skp->Text(x, y, "Selected slot cargo information", 31);
+	y += 40;
+
+	sprintf(buffer, "Name: %s", cargoInfo.name);
+	skp->Text(x, y, buffer, strlen(buffer));
+	y += 20;
+
+	sprintf(buffer, "Mass: %gkg", cargoInfo.mass);
+	skp->Text(x, y, buffer, strlen(buffer));
+
+	switch (cargoInfo.type)
+	{
+	case UCSO::Vessel::STATIC:
+		skp->Text(x, y - 40, "Type: Static", 12);
+		break;
+
+	case UCSO::Vessel::RESOURCE:
+		skp->Text(x, y - 40, "Type: Resource", 14);
+		y += 20;
+
+		sprintf(buffer, "Resource: %s", cargoInfo.resource);
+		skp->Text(x, y, buffer, strlen(buffer));
+		y += 20;
+
+		sprintf(buffer, "Resource mass: %gkg", cargoInfo.resourceMass);
+		skp->Text(x, y, buffer, strlen(buffer));
+		break;
+
+	case UCSO::Vessel::UNPACKABLE_ONLY:
+		skp->Text(x, y - 40, "Type: Unpackable only", 21);
+		y += 20;
+
+		sprintf(buffer, "Unpacked spawn count: %d cargo(es)", cargoInfo.spawnCount);
+		skp->Text(x, y, buffer, strlen(buffer));
+		y += 20;
+
+	case UCSO::Vessel::PACKABLE_UNPACKABLE:
+		if (cargoInfo.type == UCSO::Vessel::PACKABLE_UNPACKABLE)
+		{
+			skp->Text(x, y - 40, "Type: Packable and unpackable", 29);
+			y += 20;
+		}
+
+		switch (cargoInfo.unpackingType)
+		{
+		case UCSO::Vessel::UCSO_RESOURCE:
+			skp->Text(x, y, "Unpacking type: UCSO Resource", 29);
+			y += 20;
+			break;
+
+		case UCSO::Vessel::UCSO_MODULE:
+			skp->Text(x, y, "Unpacking type: UCSO Module", 27);
+			y += 20;
+
+			sprintf(buffer, "Breathable: %s", cargoInfo.breathable ? "Yes" : "No");
+			skp->Text(x, y, buffer, strlen(buffer));
+			break;
+
+		case UCSO::Vessel::ORBITER_VESSEL:
+			skp->Text(x, y, "Unpacking type: Orbiter vessel", 30);
+			y += 20;
+
+			sprintf(buffer, "Spawn module: %s", cargoInfo.spawnModule);
+			skp->Text(x, y, buffer, strlen(buffer));
+			y += 20;
+
+			switch (cargoInfo.unpackingMode)
+			{
+			case UCSO::Vessel::LANDING:
+				skp->Text(x, y, "Unpacking mode: Landing", 23);
+				break;
+
+			case UCSO::Vessel::DELAYING:
+				skp->Text(x, y, "Unpacking mode: Delaying", 24);
+				y += 20;
+
+				sprintf(buffer, "Unpacking delay: %is", cargoInfo.unpackingDelay);
+				skp->Text(x, y, buffer, strlen(buffer));
+				break;
+
+			case UCSO::Vessel::MANUAL:
+				skp->Text(x, y, "Unpacking mode: Manual", 22);
+				break;
+			}
+
+			break;
+		case UCSO::Vessel::CUSTOM_CARGO:
+			skp->Text(x, y, "Unpacking type: Custom cargo", 28);
+			y += 20;
+
+			sprintf(buffer, "Breathable: %s", cargoInfo.breathable ? "Yes" : "No");
+			skp->Text(x, y, buffer, strlen(buffer));
+			break;
+		}
+
+		break;
+	}
+
+	return true;
 }
 
 int XR2_UCSOPlatform::clbkConsumeBufferedKey(DWORD key, bool down, char* kstate)
@@ -303,189 +466,6 @@ int XR2_UCSOPlatform::clbkConsumeBufferedKey(DWORD key, bool down, char* kstate)
 	}
 
 	return 0;
-}
-
-bool XR2_UCSOPlatform::clbkDrawHUD(int mode, const HUDPAINTSPEC* hps, oapi::Sketchpad* skp)
-{
-	// Draw the default HUD (Surface, Orbit, etc...)
-	VESSEL4::clbkDrawHUD(mode, hps, skp);
-
-	// Determine the screen ratio
-	int s = hps->H;
-	double d = s * 0.00130208;
-	int sw = hps->W;
-	int lw = static_cast<int>(16 * sw / 1024);
-	int x = 0;
-	if (s / sw < 0.7284) x = (lw * 10) + 10;
-	int y = static_cast<int>((168 * d) + (-88 * d));
-
-	// Set the color to green
-	skp->SetTextColor(0x0066FF66);
-
-	sprintf(buffer, "Selected slot to use: %d", slotIndex + 1);
-	skp->Text(x, y, buffer, strlen(buffer));
-	y += 20;
-
-	sprintf(buffer, "Selected cargo to add: %s", ucso->GetAvailableCargoName(cargoIndex));
-	skp->Text(x, y, buffer, strlen(buffer));
-	y += 20;
-
-	sprintf(buffer, "Selected tank to drain fuel to: %s", fuelIndex == 2 ? "SCRAM" : fuelIndex == 1 ? "RCS" : "Main");
-	skp->Text(x, y, buffer, strlen(buffer));
-	y += 36;
-
-	skp->Text(x, y, "S = Select a slot to use", 24);
-	y += 20;
-
-	skp->Text(x, y, "Shift + S = Select a cargo to add", 33);
-	y += 20;
-
-	skp->Text(x, y, "F = Select a tank to drain fuel to", 34);
-	y += 20;
-
-	skp->Text(x, y, "Shift + A = Add the selected cargo", 34);
-	y += 20;
-
-	skp->Text(x, y, "Shift + G = Grapple the nearest cargo", 37);
-	y += 20;
-
-	skp->Text(x, y, "Shift + R = Release the grappled cargo", 38);
-	y += 20;
-
-	skp->Text(x, y, "Shift + F = Drain the nearest fuel resource", 43);
-	y += 20;
-
-	skp->Text(x, y, "Shift + D = Delete the grappled cargo", 37);
-
-	// Display the message if the timer is below 5
-	if (timer < 5) { y += 36; skp->Text(x, y, message, strlen(message)); }
-
-	y += 36;
-	skp->Text(x, y, "Cargoes information", 19);
-	y += 20;
-
-	int cargoesCount = 0;
-	double totalMass = 0;
-
-	for (int slot = 0; slot < 6; slot++) 
-	{
-		OBJHANDLE slotCargo = GetAttachmentStatus(cargoSlots[slot]);
-		if (!slotCargo) continue;
-
-		cargoesCount++;
-		totalMass += oapiGetMass(slotCargo);
-	}
-
-	sprintf(buffer, "Cargoes count: %d/6", cargoesCount);
-	skp->Text(x, y, buffer, strlen(buffer));
-	y += 20;
-
-	sprintf(buffer, "Total cargoes mass: %gkg", totalMass);
-	skp->Text(x, y, buffer, strlen(buffer));
-
-	UCSO::Vessel::CargoInfo cargoInfo = ucso->GetCargoInfo(slotIndex);
-	if (!cargoInfo.valid) return true;
-
-	y += 36;
-	skp->Text(x, y, "Selected slot cargo information", 31);
-	y += 40;
-
-	sprintf(buffer, "Name: %s", cargoInfo.name);
-	skp->Text(x, y, buffer, strlen(buffer));
-	y += 20;
-
-	sprintf(buffer, "Mass: %gkg", cargoInfo.mass);
-	skp->Text(x, y, buffer, strlen(buffer));
-
-	switch (cargoInfo.type)
-	{
-	case UCSO::Vessel::STATIC:
-		skp->Text(x, y - 40, "Type: Static", 12);
-		break;
-
-	case UCSO::Vessel::RESOURCE:
-		skp->Text(x, y - 40, "Type: Resource", 14);
-		y += 20;
-
-		sprintf(buffer, "Resource: %s", cargoInfo.resource);
-		skp->Text(x, y, buffer, strlen(buffer));
-		y += 20;
-
-		sprintf(buffer, "Resource mass: %gkg", cargoInfo.resourceMass);
-		skp->Text(x, y, buffer, strlen(buffer));
-		break;
-
-	case UCSO::Vessel::UNPACKABLE_ONLY:
-		skp->Text(x, y - 40, "Type: Unpackable only", 21);
-		y += 20;
-
-		sprintf(buffer, "Unpacked spawn count: %d cargo(es)", cargoInfo.spawnCount);
-		skp->Text(x, y, buffer, strlen(buffer));
-		y += 20;
-
-	case UCSO::Vessel::PACKABLE_UNPACKABLE:
-		if (cargoInfo.type == UCSO::Vessel::PACKABLE_UNPACKABLE)
-		{
-			skp->Text(x, y - 40, "Type: Packable and unpackable", 29);
-			y += 20;
-		}
-
-		switch (cargoInfo.unpackingType)
-		{
-		case UCSO::Vessel::UCSO_RESOURCE:
-			skp->Text(x, y, "Unpacking type: UCSO Resource", 29);
-			y += 20;
-			break;
-
-		case UCSO::Vessel::UCSO_MODULE:
-			skp->Text(x, y, "Unpacking type: UCSO Module", 27);
-			y += 20;
-
-			sprintf(buffer, "Breathable: %s", cargoInfo.breathable ? "Yes" : "No");
-			skp->Text(x, y, buffer, strlen(buffer));
-			break;
-
-		case UCSO::Vessel::ORBITER_VESSEL:
-			skp->Text(x, y, "Unpacking type: Orbiter vessel", 30);
-			y += 20;
-
-			sprintf(buffer, "Spawn module: %s", cargoInfo.spawnModule);
-			skp->Text(x, y, buffer, strlen(buffer));
-			y += 20;
-
-			switch (cargoInfo.unpackingMode)
-			{
-			case UCSO::Vessel::LANDING:
-				skp->Text(x, y, "Unpacking mode: Landing", 23);
-				break;
-
-			case UCSO::Vessel::DELAYING:
-				skp->Text(x, y, "Unpacking mode: Delaying", 24);
-				y += 20;
-
-				sprintf(buffer, "Unpacking delay: %is", cargoInfo.unpackingDelay);
-				skp->Text(x, y, buffer, strlen(buffer));
-				break;
-
-			case UCSO::Vessel::MANUAL:
-				skp->Text(x, y, "Unpacking mode: Manual", 22);
-				break;
-			}
-
-			break;
-		case UCSO::Vessel::CUSTOM_CARGO:
-			skp->Text(x, y, "Unpacking type: Custom cargo", 28);
-			y += 20;
-
-			sprintf(buffer, "Breathable: %s", cargoInfo.breathable ? "Yes" : "No");
-			skp->Text(x, y, buffer, strlen(buffer));
-			break;
-		}
-
-		break;
-	}
-
-	return true;
 }
 
 void XR2_UCSOPlatform::SetStatusLanded()

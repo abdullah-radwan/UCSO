@@ -4,7 +4,7 @@
 
 namespace UCSO
 {
-	typedef struct
+	typedef struct Data
 	{
 		int type;
 		double netMass;

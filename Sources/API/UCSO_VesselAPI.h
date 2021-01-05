@@ -1,6 +1,6 @@
 // =======================================================================================
-// UCSO_VesselAPI.h : The internal header of the vessel's API.
-// Copyright © 2020 Abdullah Radwan. All rights reserved.
+// UCSO_VesselAPI.h : The internal header of the vessels' API.
+// Copyright © 2020-2021 Abdullah Radwan. All rights reserved.
 //
 // This file is part of UCSO.
 //
@@ -112,7 +112,7 @@ private:
 	const char* version = nullptr;
 
 	typedef UCSO::CustomCargo* (*CustomCargoFunction)(OBJHANDLE);
-	HINSTANCE customCargoDll;
+	HINSTANCE customCargoDll = nullptr;
 	CustomCargoFunction GetCustomCargo = nullptr;
 
 	struct EmptyResult

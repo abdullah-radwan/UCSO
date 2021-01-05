@@ -1,6 +1,6 @@
 // =======================================================================================
-// UCSO_VesselAPI.cpp : The internal class of the vessel's API.
-// Copyright © 2020 Abdullah Radwan. All rights reserved.
+// UCSO_VesselAPI.cpp : The internal class of the vessels' API.
+// Copyright © 2020-2021 Abdullah Radwan. All rights reserved.
 //
 // This file is part of UCSO.
 //
@@ -360,7 +360,9 @@ VesselAPI::GrappleResult VesselAPI::GrappleCargo(int slot)
 
 		if (customCargo)
 		{
-			if (evaMode || !customCargo->GetCargoInfo().unpacked) cargoMap[range] = { false, customCargo };
+			UCSO::CustomCargo::CargoInfo cargoInfo = customCargo->GetCargoInfo();
+
+			if (evaMode || cargoInfo.type == STATIC || !cargoInfo.unpacked) cargoMap[range] = { false, customCargo };
 		}
 		else
 		{
@@ -368,7 +370,7 @@ VesselAPI::GrappleResult VesselAPI::GrappleCargo(int slot)
 			UCSO::DataStruct dataStruct = vCargo->GetDataStruct();
 
 			// If grapple unpacked is true, or if it's false, then check if the cargo is packed
-			if (evaMode || !dataStruct.unpacked) cargoMap[range] = { true, cargo };
+			if (evaMode || dataStruct.type == STATIC || !dataStruct.unpacked) cargoMap[range] = { true, cargo };
 		}
 	}
 
