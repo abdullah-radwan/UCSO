@@ -5,12 +5,12 @@
 //                   All rights reserved
 //          UCSO integration by Abdullah Radwan
 //
-// ShuttlePB_UCSO.cpp
+// ShuttlePB.cpp
 // Control module for ShuttlePB vessel class
 //
 // ==============================================================
 
-#include "ShuttlePB_UCSO.h"
+#include "ShuttlePB.h"
 
 // ==============================================================
 // Overloaded callback functions
@@ -495,6 +495,19 @@ void ShuttlePB::clbkPreStep(double simt, double simdt, double mjd)
 	}
 }
 
+void ShuttlePB::SetStatusLanded()
+{
+	VESSELSTATUS2 status;
+	memset(&status, 0, sizeof(status));
+	status.version = 2;
+	GetStatusEx(&status);
+	status.status = 1;
+
+	ucso->SetGroundRotation(status, 1.1);
+
+	DefSetStateEx(&status);
+}
+
 // ==============================================================
 // Airfoil lift/drag functions
 // ==============================================================
@@ -531,19 +544,6 @@ void ShuttlePB::hlift (VESSEL *v, double aoa, double M, double Re,
 	*cd = 0.03;
 	*cd += oapiGetInducedDrag (*cl, 1.5, 0.6); // induced drag
 	*cd += oapiGetWaveDrag (M, 0.75, 1.0, 1.1, 0.04);  // wave drag
-}
-
-void ShuttlePB::SetStatusLanded()
-{
-	VESSELSTATUS2 status;
-	memset(&status, 0, sizeof(status));
-	status.version = 2;
-	GetStatusEx(&status);
-	status.status = 1;
-
-	ucso->SetGroundRotation(status, 1.1);
-
-	DefSetStateEx(&status);
 }
 
 // ==============================================================

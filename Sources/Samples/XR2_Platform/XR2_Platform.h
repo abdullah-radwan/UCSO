@@ -1,5 +1,5 @@
 // =======================================================================================
-// XR2_UCSOPlatform.h : XR-2 Ravenstar UCSO cargoes platform.
+// XR2_Platform.h : XR-2 Ravenstar UCSO cargoes platform.
 // Copyright © 2020-2021 Abdullah Radwan. All rights reserved.
 //
 // This file is part of UCSO.
@@ -22,21 +22,13 @@
 #pragma once
 #include <XRSound.h>
 #include <XRVesselCtrl.h>
-#include <UCSO_Vessel.h>
+#include <UCSO/Vessel.h>
 
-#define SFX_BAY_DOORS_CLOSED 1
-#define SFX_SLOT_EMPTY 2
-#define SFX_SLOT_OCCUPIED 3
-#define SFX_CARGO_RELEASED 4
-#define SFX_CARGO_RELEASE_FAILED 5
-#define SFX_CARGO_GRAPPLED 6
-#define SFX_CARGO_GRAPPLE_NORANGE 7
-
-class XR2_UCSOPlatform : public VESSEL4
+class XR2_Platform : public VESSEL4
 {
 public:
-	XR2_UCSOPlatform(OBJHANDLE hVessel, int flightmodel);
-	~XR2_UCSOPlatform();
+	XR2_Platform(OBJHANDLE hVessel, int flightmodel);
+	~XR2_Platform();
 
 	void clbkSetClassCaps(FILEHANDLE cfg);
 	void clbkPostCreation();
@@ -65,6 +57,16 @@ private:
 	void SetStatusLanded();
 };
 
+// Sounds
+const int SFX_BAY_DOORS_CLOSED = 1;
+const int SFX_SLOT_EMPTY = 2;
+const int SFX_SLOT_OCCUPIED = 3;
+const int SFX_CARGO_RELEASED = 4;
+const int SFX_CARGO_RELEASE_FAILED = 5;
+const int SFX_CARGO_GRAPPLED = 6;
+const int SFX_CARGO_GRAPPLE_NORANGE = 7;
+
+// Touchdown points
 static TOUCHDOWNVTX tdVtx[11] =
 {
 	{ { 0, -0.8096, 2.5 }, 2e4, 1e3, 3.0 },

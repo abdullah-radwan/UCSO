@@ -50,12 +50,12 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(ModuleDir)\</OutDir>
-    <TargetName>UCSO_CustomCargo</TargetName>
+    <OutDir>$(ModuleDir)\UCSO\</OutDir>
+    <TargetName>CustomCargo</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>$(ModuleDir)\</OutDir>
-    <TargetName>UCSO_CustomCargo</TargetName>
+    <OutDir>$(ModuleDir)\UCSO\</OutDir>
+    <TargetName>CustomCargo</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

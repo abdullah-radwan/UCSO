@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29123.88
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ShuttlePB_UCSO", "ShuttlePB_UCSO.vcxproj", "{BA832307-A6C6-4EB0-8915-15A442D4D5C9}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "XR2_Platform", "XR2_Platform.vcxproj", "{BA832307-A6C6-4EB0-8915-15A442D4D5C9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

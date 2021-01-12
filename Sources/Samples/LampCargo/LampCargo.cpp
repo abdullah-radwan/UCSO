@@ -22,9 +22,6 @@
 #include "LampCargo.h"
 #include <sstream>
 
-const double LampCargo::unpackedSize = 4;
-const LampCargo::SpotStruct LampCargo::spotStruct;
-
 DLLCLBK VESSEL* ovcInit(OBJHANDLE hvessel, int flightmodel) { return new LampCargo(hvessel, flightmodel); }
 
 DLLCLBK void ovcExit(VESSEL* vessel) { if (vessel) delete static_cast<LampCargo*>(vessel); }
@@ -145,7 +142,7 @@ void LampCargo::SetPackedCaps()
 	spotLight->Activate(false);
 
 	// Replace the unpacked mesh with the packed mesh
-	InsertMesh("UCSO//Container3", 0);
+	InsertMesh("UCSO/Container3", 0);
 
 	SetEmptyMass(325);
 
@@ -188,9 +185,9 @@ void LampCargo::SetUnpackedCaps(bool init)
 	beaconStruct.beaconSpec.active = true;
 	spotLight->Activate(true);
 		
-	InsertMesh("UCSO//Lamp", 0);
+	InsertMesh("UCSO/Lamp", 0);
 
-	SetSize(unpackedSize);
+	SetSize(UNPACKED_SIZE);
 
 	SetEmptyMass(50);
 
@@ -204,15 +201,15 @@ void LampCargo::SetUnpackedCaps(bool init)
 	double stiffness = GetMass() * G * 1000;
 	double damping = 0.9 * (2 * sqrt(GetMass() * stiffness));
 
-	double sizeSin = -sin(30 * RAD) * unpackedSize;
-	double sizeCos = cos(30 * RAD) * unpackedSize;
+	double sizeSin = -sin(30 * RAD) * UNPACKED_SIZE;
+	double sizeCos = cos(30 * RAD) * UNPACKED_SIZE;
 
 	TOUCHDOWNVTX tdvtx[4] =
 	{
 	{ { sizeCos, -cargoInfo.unpackedHeight, sizeSin}, stiffness, damping, 3, 3},
-	{ { 0, -cargoInfo.unpackedHeight, unpackedSize }, stiffness, damping, 3, 3},
+	{ { 0, -cargoInfo.unpackedHeight, UNPACKED_SIZE }, stiffness, damping, 3, 3},
 	{ { -sizeCos, -cargoInfo.unpackedHeight, sizeSin }, stiffness, damping, 3, 3},
-	{ { 0, 15 * unpackedSize, 0 }, stiffness, damping, 3, 3}
+	{ { 0, 15 * UNPACKED_SIZE, 0 }, stiffness, damping, 3, 3}
 	};
 
 	SetTouchdownPoints(tdvtx, 4);

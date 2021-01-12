@@ -35,7 +35,7 @@ ShuttlePB:ShuttlePB_UCSO
   PRPLEVEL 0:0.999937
   NAVFREQ 0 0
 END
-CargoLifeModule:UCSO\CargoLifeModule
+CargoLifeModule1:UCSO\CargoLifeModule
   STATUS Landed Moon
   POS -16.4532580 22.1023600
   HEADING 90.00
@@ -44,7 +44,7 @@ CargoLifeModule:UCSO\CargoLifeModule
   AFCMODE 7
   Unpacked 1
 END
-CargoSolarPanel:UCSO\CargoSolarPanel
+CargoSolarPanel1:UCSO\CargoSolarPanel
   STATUS Landed Moon
   POS -16.4533740 22.1016220
   HEADING 90.00
@@ -89,7 +89,7 @@ CargoSolarPanel5:UCSO\CargoSolarPanel
   AFCMODE 7
   Unpacked 1
 END
-CargoCustomLamp:UCSO\CargoCustomLamp
+CargoCustomLamp1:UCSO\CargoCustomLamp
   STATUS Landed Moon
   POS -16.4526880 22.1023750
   HEADING 270.00
@@ -125,7 +125,7 @@ CargoCustomLamp4:UCSO\CargoCustomLamp
   AFCMODE 7
   Unpacked 1
 END
-CargoFlagEgypt:UCSO\CargoFlagEgypt
+CargoFlagEgypt1:UCSO\CargoFlagEgypt
   STATUS Landed Moon
   POS -16.4529280 22.1022350
   HEADING 90.01
@@ -134,7 +134,7 @@ CargoFlagEgypt:UCSO\CargoFlagEgypt
   AFCMODE 7
   Unpacked 1
 END
-CargoFuelTank:UCSO\CargoFuelTank
+CargoFuelTank1:UCSO\CargoFuelTank
   STATUS Landed Moon
   POS -16.4532480 22.1012550
   HEADING 90.00
@@ -144,7 +144,7 @@ CargoFuelTank:UCSO\CargoFuelTank
   PRPLEVEL 0:1.000000
   Unpacked 1
 END
-CargoTableChairs:UCSO\CargoTableChairs
+CargoTableChairs1:UCSO\CargoTableChairs
   STATUS Landed Moon
   POS -16.4532580 22.1023600
   HEADING 90.00

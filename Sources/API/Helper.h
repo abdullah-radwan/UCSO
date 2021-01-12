@@ -1,3 +1,24 @@
+// =======================================================================================
+// Helper.h : Shared functions between all API classes.
+// Copyright © 2020-2021 Abdullah Radwan. All rights reserved.
+//
+// This file is part of UCSO.
+//
+// UCSO is free software : you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// UCSO is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with UCSO. If not, see <https://www.gnu.org/licenses/>.
+//
+// =======================================================================================
+
 #pragma once
 #include <Orbitersdk.h>
 #include <string>
@@ -25,12 +46,9 @@ namespace UCSO
 
 	static void SetSpawnName(std::string& name)
 	{
-		// If the initial spawn name doesn't exists, use it
-		if (!oapiGetVesselByName(&name[0])) return;
-
-		for (int index = 1; index++;)
+		for (int index = 0; ++index;)
 		{
-			// Add the index to the string. .c_str() is used to avoid a bug
+			// Add the index to the string. c_str() is used to avoid a bug
 			std::string spawnName = name.c_str() + std::to_string(index);
 			// If the spawn name doesn't exists
 			if (!oapiGetVesselByName(&spawnName[0])) { name = spawnName; return; }

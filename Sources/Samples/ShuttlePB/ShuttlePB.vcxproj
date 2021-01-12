@@ -10,16 +10,10 @@
       <Platform>Win32</Platform>
     </ProjectConfiguration>
   </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="XR2_UCSOPlatform.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="XR2_UCSOPlatform.h" />
-  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <ProjectGuid>{BA832307-A6C6-4EB0-8915-15A442D4D5C9}</ProjectGuid>
-    <RootNamespace>XR2_UCSOPlatform</RootNamespace>
+    <RootNamespace>ShuttlePB</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -49,12 +43,12 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(ModuleDir)\</OutDir>
-    <TargetName>XR2_UCSOPlatform</TargetName>
+    <OutDir>$(ModuleDir)\UCSO\</OutDir>
+    <TargetName>ShuttlePB</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>$(ModuleDir)\</OutDir>
-    <TargetName>XR2_UCSOPlatform</TargetName>
+    <OutDir>$(ModuleDir)\UCSO\</OutDir>
+    <TargetName>ShuttlePB</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -64,7 +58,7 @@
     </ClCompile>
     <Link>
       <OutputFile>$(TargetPath)</OutputFile>
-      <AdditionalDependencies>orbiter.lib;orbitersdk.lib;UCSO_API.lib;DynamicXRSoundD.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>orbiter.lib;orbitersdk.lib;UCSO_API.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -75,9 +69,15 @@
     </ClCompile>
     <Link>
       <OutputFile>$(TargetPath)</OutputFile>
-      <AdditionalDependencies>orbiter.lib;orbitersdk.lib;UCSO_API.lib;DynamicXRSound.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>orbiter.lib;orbitersdk.lib;UCSO_API.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="ShuttlePB.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="ShuttlePB.h" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

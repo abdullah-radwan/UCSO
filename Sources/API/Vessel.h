@@ -1,5 +1,5 @@
 // =======================================================================================
-// UCSO_Vessel.h : Defines the Universal Cargo System for Orbiter (UCSO) vessel's 1.0.1 public API.
+// Vessel.h : Defines the Universal Cargo System for Orbiter (UCSO) vessels' 1.1 public API.
 // Copyright © 2020-2021 Abdullah Radwan. All rights reserved.
 //
 // This file is part of UCSO.
@@ -46,7 +46,6 @@ namespace UCSO
 			RELEASE_SUCCEEDED = 0,   // The cargo is released, unpacked, or deleted successfully.
 			NO_EMPTY_POSITION,       // There is no empty position near the vessel for release on the ground for ReleaseCargo,
 									 // Or no unpackable cargo in the unpacking range for UnpackCargo.
-									 // Or no cargo is found in the deletion range for DeleteCargo.
 		    RELEASE_SLOT_EMPTY,      // The passed slot is empty, or all slots are empty if -1 is passed. Not for UnpackCargo.
 			RELEASE_SLOT_CLOSED,     // The passed slot (or all slots) door is closed. Not for UnpackCargo.
 			RELEASE_SLOT_UNDEFINED,  // The passed slot (or all slots) is undefiend or invalid. Not for UnpackCargo.
@@ -171,11 +170,6 @@ namespace UCSO
 		// Parameters:
 		//	unpackingRange: the unpacking range in meters. The default value is 5 meters.
 		virtual void SetUnpackingRange(double unpackingRange) = 0;
-
-		// Set the cargo deletion range for DeleteCargo method.
-		// Parameters:
-		//	cargoRange: the deletion range in meters. The default value is 100 meter.
-		virtual void SetCargoDeletionRange(double deletionRange) = 0;
 
 		// Sets the resource drainage search range for DrainStationOrUnpackedResource method.
 		// Parameters:

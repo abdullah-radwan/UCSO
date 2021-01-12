@@ -21,7 +21,7 @@
 
 #pragma once
 #include <vector>
-#include "../UCSO_CustomCargo.h"
+#include "../CustomCargo.h"
 
 DLLCLBK void AddCustomCargo(UCSO::CustomCargo* cargo);
 

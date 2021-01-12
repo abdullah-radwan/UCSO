@@ -19,8 +19,15 @@
 //
 // =======================================================================================
 
-#include "UCSO_VesselAPI.h"
+#include "VesselAPI.h"
 #include <filesystem>
+
+typedef const char* (*GetVersionFunction)();
+const char* version = nullptr;
+
+typedef UCSO::CustomCargo* (*CustomCargoFunction)(OBJHANDLE);
+HINSTANCE customCargoDll = nullptr;
+CustomCargoFunction GetCustomCargo = nullptr;
 
 void ExceptionHandler(unsigned int u, EXCEPTION_POINTERS* pExp) { throw; }
 
@@ -34,7 +41,7 @@ VesselAPI::VesselAPI(VESSEL* vessel)
 	this->vessel = vessel;
 
 	// Load cargo DLL
-	HINSTANCE ucsoDll = LoadLibraryA("Modules\\UCSO_Cargo.dll");
+	HINSTANCE ucsoDll = LoadLibraryA("Modules/UCSO/Cargo.dll");
 
 	// If the DLL is loaded
 	if (ucsoDll)
@@ -50,7 +57,7 @@ VesselAPI::VesselAPI(VESSEL* vessel)
 	if (!version) oapiWriteLog("UCSO API Warning: Couldn't load the cargo API");
 
 	// Load custom cargo DLL
-	customCargoDll = LoadLibraryA("Modules\\UCSO_CustomCargo.dll");
+	customCargoDll = LoadLibraryA("Modules/UCSO/CustomCargo.dll");
 
 	if (customCargoDll) GetCustomCargo = reinterpret_cast<CustomCargoFunction>(GetProcAddress(customCargoDll, "GetCustomCargo"));
 
@@ -109,8 +116,6 @@ void VesselAPI::SetReleaseVelocity(double releaseVelocity) { this->releaseVeloci
 void VesselAPI::SetCargoRowLength(int rowLength) { this->rowLength = rowLength; }
 
 void VesselAPI::SetUnpackingRange(double unpackingRange) { this->unpackingRange = unpackingRange; }
-
-void VesselAPI::SetCargoDeletionRange(double deletionRange) { this->deletionRange = deletionRange; }
 
 void VesselAPI::SetResourceRange(double resourceRange) { this->resourceRange = resourceRange; }
 
@@ -259,7 +264,7 @@ VesselAPI::GrappleResult VesselAPI::AddCargo(int index, int slot)
 	std::string spawnName = cargoName;
 	UCSO::SetSpawnName(spawnName);
 
-	std::string className = "UCSO\\";
+	std::string className = "UCSO/";
 	className += cargoName;
 
 	VESSELSTATUS2 status;
@@ -339,9 +344,9 @@ VesselAPI::GrappleResult VesselAPI::GrappleCargo(int slot)
 		vessel->Global2Local(cargoPos, cargoPos);
 		VECTOR3 subtract = pos - cargoPos;
 
-		double range = sqrt(subtract.x * subtract.x + subtract.z * subtract.z);
+		double range = sqrt(subtract.x * subtract.x + subtract.z * subtract.z) - cargo->GetSize();
 
-		// Proceed if the distance is lower than 1 meter
+		// Proceed if the distance is lower than the grapple range and the cargo radius
 		if (range > grappleRange) continue;
 
 		// If the cargo is attached to another vessel
@@ -517,7 +522,7 @@ bool VesselAPI::PackCargo()
 		VECTOR3 pos;
 		vessel->GetRelativePos(cargo->GetHandle(), pos);
 
-		double range = length(pos);
+		double range = length(pos) - cargo->GetSize();
 
 		if (range > unpackingRange) continue;
 
@@ -576,7 +581,7 @@ bool VesselAPI::UnpackCargo()
 		VECTOR3 pos;
 		vessel->GetRelativePos(cargo->GetHandle(), pos);
 
-		double range = length(pos);
+		double range = length(pos) - cargo->GetSize();
 
 		if (range > unpackingRange) continue;
 
@@ -630,47 +635,27 @@ bool VesselAPI::UnpackCargo()
 
 VesselAPI::ReleaseResult VesselAPI::DeleteCargo(int slot)
 {
+	if (attachsMap.empty()) return RELEASE_SLOT_UNDEFINED;
+
+	OccupiedResult result;
+
 	if (slot == -1)
 	{
-		std::map<double, OBJHANDLE> cargoMap;
+		// Get the first occupied slot and OBJHANDLE for the attached cargo
+		result = GetOccupiedSlot();
+		// If the handle is nullptr
+		if (!result.handle) return result.opened ? RELEASE_SLOT_EMPTY : RELEASE_SLOT_CLOSED;
 
-		for (DWORD vesselIndex = 0; vesselIndex < oapiGetVesselCount(); vesselIndex++)
-		{
-			VESSEL* cargo = oapiGetVesselInterface(oapiGetVesselByIndex(vesselIndex));
-
-			// If the vessel is UCSO cargo
-			if (strncmp(cargo->GetClassNameA(), "UCSO", 4) != 0) continue;
-
-			VECTOR3 pos;
-			vessel->GetRelativePos(cargo->GetHandle(), pos);
-
-			double range = length(pos);
-
-			if (range > deletionRange) continue;
-
-			UCSO::CustomCargo* customCargo = nullptr;
-
-			if (GetCustomCargo) customCargo = GetCustomCargo(cargo->GetHandle());
-
-			if (customCargo)
-			{
-				if (cargo->GetAttachmentStatus(customCargo->GetCargoAttachmentHandle())) continue;
-			}
-			else if (cargo->GetAttachmentStatus(cargo->GetAttachmentHandle(true, 0))) continue;
-
-			cargoMap[range] = cargo->GetHandle();
-		}
-
-		if(cargoMap.empty()) return NO_EMPTY_POSITION;
-
-		for (auto const& [range, handle] : cargoMap) if (oapiDeleteVessel(handle)) return RELEASE_SUCCEEDED;
-		
-		return RELEASE_FAILED;
+		slot = result.slot;
 	}
-
-	if (attachsMap.empty() || attachsMap.find(slot) == attachsMap.end() || !CheckAttachment(attachsMap[slot].attachHandle))
-		return RELEASE_SLOT_UNDEFINED;
+	// If the slot doesn't exists or it's invalid
+	else if (attachsMap.find(slot) == attachsMap.end() || !CheckAttachment(attachsMap[slot].attachHandle)) return RELEASE_SLOT_UNDEFINED;
 	else if (!attachsMap[slot].opened) return RELEASE_SLOT_CLOSED;
+	else
+	{
+		result.handle = VerifySlot(slot);
+		if (!result.handle) return RELEASE_SLOT_EMPTY;
+	}
 
 	OBJHANDLE cargoHandle;
 
@@ -733,20 +718,18 @@ double VesselAPI::DrainStationOrUnpackedResource(const char* resource, double ma
 
 	for (DWORD vesselIndex = 0; vesselIndex < oapiGetVesselCount(); vesselIndex++)
 	{
-		OBJHANDLE oHandle = oapiGetVesselByIndex(vesselIndex);
+		VESSEL* oVessel = oapiGetVesselInterface(oapiGetVesselByIndex(vesselIndex));
 
 		VECTOR3 pos;
-		vessel->GetRelativePos(oHandle, pos);
+		vessel->GetRelativePos(oVessel->GetHandle(), pos);
 
-		if (length(pos) > resourceRange) continue;
-
-		VESSEL* oVessel = oapiGetVesselInterface(oHandle);
+		if ((length(pos) - oVessel->GetSize()) > resourceRange) continue;
 
 		if (strncmp(oVessel->GetClassNameA(), "UCSO", 4) == 0)
 		{
 			UCSO::CustomCargo* customCargo = nullptr;
 
-			if (GetCustomCargo) customCargo = GetCustomCargo(oHandle);
+			if (GetCustomCargo) customCargo = GetCustomCargo(oVessel->GetHandle());
 
 			double drainedMass = 0;
 
@@ -856,7 +839,7 @@ VESSEL* VesselAPI::GetNearestBreathableCargo()
 		VECTOR3 pos;
 		vessel->GetRelativePos(cargo->GetHandle(), pos);
 
-		double distance = length(pos);
+		double distance = length(pos) - cargo->GetSize();
 
 		if (distance > pair.first) continue;
 
@@ -896,7 +879,7 @@ void VesselAPI::InitAvailableCargo()
 {
 	// Itereate through every file in Config/Vessels/UCSO
 	for (const std::filesystem::directory_entry& entry :
-					std::filesystem::directory_iterator(std::filesystem::current_path().string() + "\\Config\\Vessels\\UCSO")) 
+					std::filesystem::directory_iterator(std::filesystem::current_path().string() + "/Config/Vessels/UCSO")) 
 	{
 		// Get the filename
 		std::string path = entry.path().filename().string();

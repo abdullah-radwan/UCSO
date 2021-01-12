@@ -34,7 +34,7 @@ ShuttlePB:ShuttlePB_UCSO
   PRPLEVEL 0:1.000000
   NAVFREQ 0 0
 END
-CargoFlagChina:UCSO\CargoFlagChina
+CargoFlagChina1:UCSO\CargoFlagChina
   STATUS Landed Earth
   POS -80.6759380 28.5227380
   HEADING 224.00
@@ -43,7 +43,7 @@ CargoFlagChina:UCSO\CargoFlagChina
   AFCMODE 7
   Unpacked 1
 END
-CargoFlagEgypt:UCSO\CargoFlagEgypt
+CargoFlagEgypt1:UCSO\CargoFlagEgypt
   STATUS Landed Earth
   POS -80.6759470 28.5227280
   HEADING 224.00
@@ -52,7 +52,7 @@ CargoFlagEgypt:UCSO\CargoFlagEgypt
   AFCMODE 7
   Unpacked 1
 END
-CargoFlagEurope:UCSO\CargoFlagEurope
+CargoFlagEurope1:UCSO\CargoFlagEurope
   STATUS Landed Earth
   POS -80.6759570 28.5227190
   HEADING 224.00
@@ -61,7 +61,7 @@ CargoFlagEurope:UCSO\CargoFlagEurope
   AFCMODE 7
   Unpacked 1
 END
-CargoFlagIndia:UCSO\CargoFlagIndia
+CargoFlagIndia1:UCSO\CargoFlagIndia
   STATUS Landed Earth
   POS -80.6759660 28.5227090
   HEADING 224.00
@@ -70,7 +70,7 @@ CargoFlagIndia:UCSO\CargoFlagIndia
   AFCMODE 7
   Unpacked 1
 END
-CargoFlagJapan:UCSO\CargoFlagJapan
+CargoFlagJapan1:UCSO\CargoFlagJapan
   STATUS Landed Earth
   POS -80.6759280 28.5227290
   HEADING 224.00
@@ -79,7 +79,7 @@ CargoFlagJapan:UCSO\CargoFlagJapan
   AFCMODE 7
   Unpacked 1
 END
-CargoFlagRussia:UCSO\CargoFlagRussia
+CargoFlagRussia1:UCSO\CargoFlagRussia
   STATUS Landed Earth
   POS -80.6759380 28.5227190
   HEADING 224.00
@@ -88,7 +88,7 @@ CargoFlagRussia:UCSO\CargoFlagRussia
   AFCMODE 7
   Unpacked 1
 END
-CargoFlagUS:UCSO\CargoFlagUS
+CargoFlagUS1:UCSO\CargoFlagUS
   STATUS Landed Earth
   POS -80.6759470 28.5227090
   HEADING 224.00

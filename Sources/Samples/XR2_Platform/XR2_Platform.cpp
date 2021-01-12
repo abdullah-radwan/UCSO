@@ -1,5 +1,5 @@
 // =======================================================================================
-// XR2_UCSOPlatform.cpp : The platform class.
+// XR2_Platform.cpp : The platform class.
 // Copyright © 2020-2021 Abdullah Radwan. All rights reserved.
 //
 // This file is part of UCSO.
@@ -19,14 +19,14 @@
 //
 // =======================================================================================
 
-#include "XR2_UCSOPlatform.h"
+#include "XR2_Platform.h"
 #include <sstream>
 
-DLLCLBK VESSEL* ovcInit(OBJHANDLE hvessel, int flightmodel) { return new XR2_UCSOPlatform(hvessel, flightmodel); }
+DLLCLBK VESSEL* ovcInit(OBJHANDLE hvessel, int flightmodel) { return new XR2_Platform(hvessel, flightmodel); }
 
-DLLCLBK void ovcExit(VESSEL* vessel) { if (vessel) delete static_cast<XR2_UCSOPlatform*>(vessel); }
+DLLCLBK void ovcExit(VESSEL* vessel) { if (vessel) delete static_cast<XR2_Platform*>(vessel); }
 
-XR2_UCSOPlatform::XR2_UCSOPlatform(OBJHANDLE hVessel, int flightmodel) : VESSEL4(hVessel, flightmodel)
+XR2_Platform::XR2_Platform(OBJHANDLE hVessel, int flightmodel) : VESSEL4(hVessel, flightmodel)
 {
 	ucso = UCSO::Vessel::CreateInstance(this);
 
@@ -34,9 +34,9 @@ XR2_UCSOPlatform::XR2_UCSOPlatform(OBJHANDLE hVessel, int flightmodel) : VESSEL4
 	message = _strdup(buffer);
 }
 
-XR2_UCSOPlatform::~XR2_UCSOPlatform() { delete ucso; delete xrSound; }
+XR2_Platform::~XR2_Platform() { delete ucso; delete xrSound; }
 
-void XR2_UCSOPlatform::clbkSetClassCaps(FILEHANDLE cfg)
+void XR2_Platform::clbkSetClassCaps(FILEHANDLE cfg)
 {
 	SetTouchdownPoints(tdVtx, 11);
 
@@ -56,7 +56,7 @@ void XR2_UCSOPlatform::clbkSetClassCaps(FILEHANDLE cfg)
 	for (int slot = 0; slot < 6; slot++) ucso->SetSlotAttachment(slot, cargoSlots[slot]);
 }
 
-void XR2_UCSOPlatform::clbkPostCreation() 
+void XR2_Platform::clbkPostCreation() 
 { 
 	xr2AttachHandle = GetAttachmentHandle(true, 0);
 
@@ -71,7 +71,7 @@ void XR2_UCSOPlatform::clbkPostCreation()
 	xrSound->LoadWav(SFX_CARGO_GRAPPLE_NORANGE, "XRSound\\Default\\No Cargo in Grapple Range.wav", XRSound::InternalOnly);
 }
 
-void XR2_UCSOPlatform::clbkPreStep(double simt, double simdt, double mjd)
+void XR2_Platform::clbkPreStep(double simt, double simdt, double mjd)
 {
 	if (timer < 5) timer += simdt;
 
@@ -90,7 +90,7 @@ void XR2_UCSOPlatform::clbkPreStep(double simt, double simdt, double mjd)
 	}
 }
 
-bool XR2_UCSOPlatform::clbkDrawHUD(int mode, const HUDPAINTSPEC* hps, oapi::Sketchpad* skp)
+bool XR2_Platform::clbkDrawHUD(int mode, const HUDPAINTSPEC* hps, oapi::Sketchpad* skp)
 {
 	// Draw the default HUD (Surface, Orbit, etc...)
 	VESSEL4::clbkDrawHUD(mode, hps, skp);
@@ -273,7 +273,7 @@ bool XR2_UCSOPlatform::clbkDrawHUD(int mode, const HUDPAINTSPEC* hps, oapi::Sket
 	return true;
 }
 
-int XR2_UCSOPlatform::clbkConsumeBufferedKey(DWORD key, bool down, char* kstate)
+int XR2_Platform::clbkConsumeBufferedKey(DWORD key, bool down, char* kstate)
 {
 	if (!down) return 0; // If the key is let go (not pressed)
 
@@ -468,7 +468,7 @@ int XR2_UCSOPlatform::clbkConsumeBufferedKey(DWORD key, bool down, char* kstate)
 	return 0;
 }
 
-void XR2_UCSOPlatform::SetStatusLanded()
+void XR2_Platform::SetStatusLanded()
 {
 	VESSELSTATUS2 status;
 	memset(&status, 0, sizeof(status));

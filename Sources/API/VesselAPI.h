@@ -1,5 +1,5 @@
 // =======================================================================================
-// UCSO_VesselAPI.h : The internal header of the vessels' API.
+// VesselAPI.h : The internal header of the vessels' API.
 // Copyright © 2020-2021 Abdullah Radwan. All rights reserved.
 //
 // This file is part of UCSO.
@@ -24,8 +24,8 @@
 #include <vector>
 #include <map>
 
-#include "UCSO_Vessel.h"
-#include "UCSO_CustomCargo.h"
+#include "Vessel.h"
+#include "CustomCargo.h"
 #include "..\Cargo\Cargo.h"
 
 class VesselAPI : public UCSO::Vessel
@@ -54,8 +54,6 @@ public:
 	void SetCargoRowLength(int rowLength) override;
 
 	void SetUnpackingRange(double unpackingRange) override;
-
-	void SetCargoDeletionRange(double deletionRange) override;
 
 	void SetResourceRange(double resourceRange) override;
 
@@ -104,16 +102,8 @@ private:
 		ATTACHMENTHANDLE attachHandle;
 	};
 
-	std::map<int, SlotData> attachsMap = std::map<int, SlotData>();
-
+	std::map<int, SlotData> attachsMap;
 	std::vector<std::string> availableCargoList;
-
-	typedef const char* (*GetVersionFunction)();
-	const char* version = nullptr;
-
-	typedef UCSO::CustomCargo* (*CustomCargoFunction)(OBJHANDLE);
-	HINSTANCE customCargoDll = nullptr;
-	CustomCargoFunction GetCustomCargo = nullptr;
 
 	struct EmptyResult
 	{
@@ -142,7 +132,6 @@ private:
 	double releaseVelocity = 0.05;
 	int rowLength = 4;
 	double unpackingRange = 5;
-	double deletionRange = 100;
 	double resourceRange = 100;
 	double breathableRange = 1000;
 

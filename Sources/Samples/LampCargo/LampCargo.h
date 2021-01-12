@@ -20,7 +20,7 @@
 // =======================================================================================
 
 #pragma once
-#include <UCSO_CustomCargo.h>
+#include <UCSO/CustomCargo.h>
 
 class LampCargo : public VESSEL4, public UCSO::CustomCargo
 {
@@ -51,28 +51,6 @@ private:
 		BEACONLIGHTSPEC beaconSpec = { BEACONSHAPE_DIFFUSE, &pos, &color, 2, 0.2, 0, 0, 0, false };
 	} beaconStruct;
 
-	// It is not necessary to use a struct for the spotlight, but to keep things organized.
-	// This struct is static because AddSpotLight method will make a copy of it, so it can be the same for all instances.
-	// In the beacon struct, AddBeacon method takes a pointer so every instance must have its own data to enable and disable the beacon.
-	static const struct SpotStruct
-	{
-		const VECTOR3 pos = { 0, 2.55, 0.5 };
-		// Tilt the light 20 degrees down
-		const double tilt = -20 * RAD;
-		const VECTOR3 dir = { 0, sin(tilt), cos(tilt) };
-		const double range = 10;
-		const double att0 = 0.001;
-		const double att1 = 0;
-		const double att2 = 0.005;
-		const double umbra = 45 * RAD;
-		const double penumbra = PI05;
-		const COLOUR4 diffuse = { 1,1,1,0 };
-		const COLOUR4 specular = { 1,1,1,0 };
-		const COLOUR4 ambient = { 0,0,0,0 };
-	} spotStruct;
-
-	static const double unpackedSize;
-
 	SpotLight* spotLight = nullptr;
 
 	UCSO::CustomCargo::CargoInfo cargoInfo;
@@ -81,3 +59,25 @@ private:
 	void SetPackedCaps();
 	void SetUnpackedCaps(bool init = true);
 };
+
+const int UNPACKED_SIZE = 4;
+
+// It is not necessary to use a struct for the spotlight, but to keep things organized.
+// This struct is static because AddSpotLight method will make a copy of it, so it can be the same for all instances.
+// In the beacon struct, AddBeacon method takes a pointer so every instance must have its own data to enable and disable the beacon.
+const struct SpotStruct
+{
+	const VECTOR3 pos = { 0, 2.55, 0.5 };
+	// Tilt the light 20 degrees down
+	const double tilt = -20 * RAD;
+	const VECTOR3 dir = { 0, sin(tilt), cos(tilt) };
+	const double range = 10;
+	const double att0 = 0.001;
+	const double att1 = 0;
+	const double att2 = 0.005;
+	const double umbra = 45 * RAD;
+	const double penumbra = PI05;
+	const COLOUR4 diffuse = { 1,1,1,0 };
+	const COLOUR4 specular = { 1,1,1,0 };
+	const COLOUR4 ambient = { 0,0,0,0 };
+} spotStruct;

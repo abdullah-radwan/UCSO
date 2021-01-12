@@ -5,13 +5,13 @@
 //                   All rights reserved
 //          UCSO integration by Abdullah Radwan
 //
-// ShuttlePB_UCSO.h
+// ShuttlePB.h
 // Class interface for ShuttlePB vessel class
 //
 // ==============================================================
 
 #pragma once
-#include <UCSO_Vessel.h>
+#include <UCSO/Vessel.h>
 
 // ==============================================================
 // Shuttle-PB class interface
@@ -29,13 +29,6 @@ public:
 	void clbkPreStep(double simt, double simdt, double mjd);
 
 private:
-	static void vlift(VESSEL* v, double aoa, double M, double Re,
-		void* context, double* cl, double* cm, double* cd);
-	static void hlift(VESSEL* v, double aoa, double M, double Re,
-		void* context, double* cl, double* cm, double* cd);
-
-	void SetStatusLanded();
-
 	// transformations for control surface animations
 	static MGROUP_ROTATE trans_Laileron, trans_Raileron;
 	static MGROUP_ROTATE trans_Lelevator, trans_Relevator;
@@ -47,6 +40,13 @@ private:
 	char buffer[256];    // To draw on the HUD
 	const char* message; // To show messages on the HUD
 	double timer = 0;    // To show the messages for 5 seconds on the HUD
+
+	void SetStatusLanded();
+
+	static void vlift(VESSEL* v, double aoa, double M, double Re,
+		void* context, double* cl, double* cm, double* cd);
+	static void hlift(VESSEL* v, double aoa, double M, double Re,
+		void* context, double* cl, double* cm, double* cd);
 };
 
 // ==============================================================
@@ -77,7 +77,8 @@ const VECTOR3 PB_DOCK_ROT = { 0,0,-1 };        // docking port alignment directi
 
 // Define impact convex hull
 static const DWORD ntdvtx = 12;
-static TOUCHDOWNVTX tdvtx[ntdvtx] = {
+static TOUCHDOWNVTX tdvtx[ntdvtx] =
+{
 	{_V(0,  -1.5, 2), 2e4, 1e3, 1.6, 1},
 	{_V(-1,  -1.5,-1.5), 2e4, 1e3, 3.0, 1},
 	{_V(1,  -1.5,-1.5), 2e4, 1e3, 3.0, 1},

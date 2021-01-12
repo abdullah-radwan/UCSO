@@ -14,16 +14,16 @@
     <ClInclude Include="CustomCargoAPI.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="UCSO_CustomCargo.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="UCSO_Vessel.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="UCSO_VesselAPI.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Helper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CustomCargo.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Vessel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="VesselAPI.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -31,10 +31,10 @@
     <ClCompile Include="CustomCargoAPI.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="UCSO_CustomCargo.cpp">
+    <ClCompile Include="CustomCargo.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="UCSO_VesselAPI.cpp">
+    <ClCompile Include="VesselAPI.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

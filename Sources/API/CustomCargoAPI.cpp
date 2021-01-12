@@ -1,5 +1,5 @@
 // =======================================================================================
-// CustomCargoAPI.cpp : The internal class of the custom cargo's API.
+// CustomCargoAPI.cpp : The internal class of the custom cargoes' API.
 // Copyright © 2020-2021 Abdullah Radwan. All rights reserved.
 //
 // This file is part of UCSO.
@@ -26,7 +26,7 @@ UCSO::CustomCargoAPI::CustomCargoAPI(CustomCargo* customCargo)
 	this->customCargo = customCargo;
 
 	// Load the custom cargo DLL
-	customCargoDll = LoadLibraryA("Modules\\UCSO_CustomCargo.dll");
+	customCargoDll = LoadLibraryA("Modules/UCSO/CustomCargo.dll");
 
 	if (customCargoDll)
 	{

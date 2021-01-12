@@ -22,11 +22,6 @@
 #include "Cargo.h"
 #include <sstream>
 
-bool UCSO::Cargo::configLoaded = false;
-double UCSO::Cargo::containerMass = 85;
-bool UCSO::Cargo::enableFocus = false;
-bool UCSO::Cargo::drainUnpackedResources = false;
-
 DLLCLBK VESSEL* ovcInit(OBJHANDLE hvessel, int flightmodel) { return new UCSO::Cargo(hvessel, flightmodel); }
 
 DLLCLBK void ovcExit(VESSEL* vessel) { if (vessel) delete static_cast<UCSO::Cargo*>(vessel); }

@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Version 1.1 - 2021-01-12
+### Changed
+- Cargoes must be attached in order to delete them.
+- Cargo numbers when spawned start from 1 instead of 2.
+- UCSO modules folder to Modules\UCSO instead of Modules, and removing UCSO from the modules name and sample projects.
+- Renamed XR2_UCSOPlatform to XR2_Platform.
+- API include files to Orbitersdk\include\UCSO instead of Orbitersdk\include.
+- Range and distance are calculated from the surface, not from the center.
+### Removed
+- SetCargoDeletionRange method as it's no longer needed.
+
 ## Version 1.0.1 - 2021-01-05
 ### Fixed
 - Cargo not grappled if its type is static and unpacked is set to false.

@@ -1,5 +1,5 @@
 // =======================================================================================
-// UCSO_CustomCargo.h : Defines the Universal Cargo System for Orbiter (UCSO) 1.0.1 custom cargo's public API.
+// CustomCargo.h : Defines the Universal Cargo System for Orbiter (UCSO) 1.1 custom cargoes' public API.
 // Copyright © 2020-2021 Abdullah Radwan. All rights reserved.
 //
 // This file is part of UCSO.
@@ -98,10 +98,10 @@ namespace UCSO
 		// Helper methods.
 
 		// This method will set a spawn name to the cargo, which is useful for unpacking a cargo with multiple items.
-		// If there is no vessel with the passed spawn name, the method will return it.
-		// Otherwise, the method will add numbers starting from 2 (e.g. Cargo2, Cargo3, Cargo4, etc.).
+		// The method will add numbers starting from 1 (e.g. Cargo1, Cargo2, Cargo3, etc.) until no vessel with the name is found.
 		// Parameters:
 		//	spawnName: the vessel initial spawn name.
+		// Returns the spawn name with a number as detailed above.
 		virtual const char* SetSpawnName(const char* spawnName);
 
 		// This method will set the rotation (arot and vrot) to set the vessel status to landed.
