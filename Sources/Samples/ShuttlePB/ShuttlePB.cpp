@@ -203,7 +203,7 @@ int ShuttlePB::clbkConsumeBufferedKey(DWORD key, bool down, char* kstate)
 				break;
 
 			case UCSO::Vessel::GRAPPLE_SUCCEEDED:
-				message = "The selected cargo is added successfully.";
+				message = "The selected cargo was added successfully.";
 				break;
 
 			case UCSO::Vessel::NO_CARGO_IN_RANGE:
@@ -223,7 +223,7 @@ int ShuttlePB::clbkConsumeBufferedKey(DWORD key, bool down, char* kstate)
 			switch (ucso->GrappleCargo())
 			{
 			case UCSO::Vessel::GRAPPLE_SUCCEEDED:
-				message = "The nearest cargo is grappled successfully.";
+				message = "The nearest cargo was grappled successfully.";
 				break;
 
 			case UCSO::Vessel::NO_CARGO_IN_RANGE:
@@ -235,7 +235,7 @@ int ShuttlePB::clbkConsumeBufferedKey(DWORD key, bool down, char* kstate)
 				break;
 
 			case UCSO::Vessel::GRAPPLE_FAILED:
-				message = "Couldn't grapple cargo";
+				message = "Couldn't grapple cargo.";
 				break;
 
 			default: break;
@@ -247,7 +247,7 @@ int ShuttlePB::clbkConsumeBufferedKey(DWORD key, bool down, char* kstate)
 			switch (ucso->ReleaseCargo())
 			{
 			case UCSO::Vessel::RELEASE_SUCCEEDED:
-				message = "The grappled cargo is released successfully.";
+				message = "The grappled cargo was released successfully.";
 				break;
 
 			case UCSO::Vessel::NO_EMPTY_POSITION:
@@ -268,14 +268,14 @@ int ShuttlePB::clbkConsumeBufferedKey(DWORD key, bool down, char* kstate)
 			return 1;
 
 		case OAPI_KEY_P:
-			if (ucso->PackCargo()) message = "The nearest cargo is packed successfully.";
+			if (ucso->PackCargo()) message = "The nearest cargo was packed successfully.";
 			else message = "Couldn't pack the nearest cargo: no packable cargo in range or the packing failed.";
 
 			timer = 0;
 			return 1;
 
 		case OAPI_KEY_U:
-			if (ucso->UnpackCargo()) message = "The nearest cargo is unpacked successfully.";
+			if (ucso->UnpackCargo()) message = "The nearest cargo was unpacked successfully.";
 			else message = "Couldn't unpack the nearest cargo: no unpackable cargo in range or the unpacking failed.";
 
 			timer = 0;
@@ -305,7 +305,7 @@ int ShuttlePB::clbkConsumeBufferedKey(DWORD key, bool down, char* kstate)
 			switch (ucso->DeleteCargo(0))
 			{
 			case UCSO::Vessel::RELEASE_SUCCEEDED:
-				message = "The grappled cargo is deleted successfully.";
+				message = "The grappled cargo was deleted successfully.";
 				break;
 
 			case UCSO::Vessel::RELEASE_SLOT_EMPTY:
@@ -348,9 +348,6 @@ bool ShuttlePB::clbkDrawHUD(int mode, const HUDPAINTSPEC* hps, oapi::Sketchpad* 
 	int x = 0;
 	if (s / sw < 0.7284) x = (lw * 10) + 10;
 	int y = static_cast<int>((168 * d) + (-88 * d));
-
-	// Set the color to green
-	skp->SetTextColor(0x0066FF66);
 
 	sprintf(buffer, "Selected cargo to add: %s", ucso->GetAvailableCargoName(cargoIndex));
 	skp->Text(x, y, buffer, strlen(buffer));

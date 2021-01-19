@@ -54,10 +54,10 @@ void UCSO::Cargo::LoadConfig()
 
 void UCSO::Cargo::clbkSetClassCaps(FILEHANDLE cfg)
 {
-	std::string mesh;
+	char buffer[512];
 
-	if (!oapiReadItem_string(cfg, "PackedMesh", &mesh[0])) ThrowWarning("mesh");
-	packedMesh += mesh.c_str();
+	if (!oapiReadItem_string(cfg, "PackedMesh", buffer)) ThrowWarning("mesh");
+	packedMesh = buffer;
 
 	if (!oapiReadItem_float(cfg, "CargoMass", dataStruct.netMass)) ThrowWarning("mass");
 
@@ -66,8 +66,8 @@ void UCSO::Cargo::clbkSetClassCaps(FILEHANDLE cfg)
 	switch (dataStruct.type)
 	{
 	case RESOURCE:
-		if (!oapiReadItem_string(cfg, "CargoResource", &dataStruct.resource[0])) ThrowWarning("resource");
-		dataStruct.resource = dataStruct.resource.c_str();
+		if (!oapiReadItem_string(cfg, "CargoResource", buffer)) ThrowWarning("resource");
+		dataStruct.resource = buffer;
 
 		CreatePropellantResource(dataStruct.netMass);
 
@@ -80,15 +80,15 @@ void UCSO::Cargo::clbkSetClassCaps(FILEHANDLE cfg)
 		switch (dataStruct.unpackingType)
 		{
 		case UCSO_RESOURCE:
-			if (!oapiReadItem_string(cfg, "CargoResource", &dataStruct.resource[0])) ThrowWarning("resource");
-			dataStruct.resource = dataStruct.resource.c_str();
+			if (!oapiReadItem_string(cfg, "CargoResource", buffer)) ThrowWarning("resource");
+			dataStruct.resource = buffer;
 
 			oapiReadItem_float(cfg, "ResourceContainerMass", resourceContainerMass);
 
 			CreatePropellantResource(dataStruct.netMass);
 		case UCSO_MODULE:
-			if (!oapiReadItem_string(cfg, "UnpackedMesh", &mesh[0])) ThrowWarning("unpacked mesh");
-			unpackedMesh += mesh.c_str();
+			if (!oapiReadItem_string(cfg, "UnpackedMesh", buffer)) ThrowWarning("unpacked mesh");
+			unpackedMesh = buffer;
 
 			if (!oapiReadItem_float(cfg, "UnpackedSize", unpackedSize)) ThrowWarning("unpacked size");
 
@@ -105,11 +105,11 @@ void UCSO::Cargo::clbkSetClassCaps(FILEHANDLE cfg)
 
 			break;
 		case ORBITER_VESSEL:
-			if (!oapiReadItem_string(cfg, "SpawnName", &dataStruct.spawnName[0])) ThrowWarning("spawn name");
-			dataStruct.spawnName = dataStruct.spawnName.c_str();
+			if (!oapiReadItem_string(cfg, "SpawnName", buffer)) ThrowWarning("spawn name");
+			dataStruct.spawnName = buffer;
 
-			if (!oapiReadItem_string(cfg, "SpawnModule", &dataStruct.spawnModule[0])) ThrowWarning("spawn module");
-			dataStruct.spawnModule = dataStruct.spawnModule.c_str();
+			if (!oapiReadItem_string(cfg, "SpawnModule", buffer)) ThrowWarning("spawn module");
+			dataStruct.spawnModule = buffer;
 
 			if (!oapiReadItem_int(cfg, "UnpackingMode", dataStruct.unpackingMode)) ThrowWarning("unpacking mode");
 

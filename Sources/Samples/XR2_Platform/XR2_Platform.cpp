@@ -104,9 +104,6 @@ bool XR2_Platform::clbkDrawHUD(int mode, const HUDPAINTSPEC* hps, oapi::Sketchpa
 	if (s / sw < 0.7284) x = (lw * 10) + 10;
 	int y = static_cast<int>((168 * d) + (-88 * d));
 
-	// Set the color to green
-	skp->SetTextColor(0x0066FF66);
-
 	sprintf(buffer, "Selected slot to use: %d", slotIndex + 1);
 	skp->Text(x, y, buffer, strlen(buffer));
 	y += 20;
@@ -296,7 +293,7 @@ int XR2_Platform::clbkConsumeBufferedKey(DWORD key, bool down, char* kstate)
 			switch (ucso->AddCargo(cargoIndex, slotIndex))
 			{
 			case UCSO::Vessel::GRAPPLE_SUCCEEDED:
-				message = "The selected cargo is added successfully.";
+				message = "The selected cargo was added successfully.";
 				xrSound->PlayWav(SFX_CARGO_GRAPPLED);
 				break;
 
@@ -331,7 +328,7 @@ int XR2_Platform::clbkConsumeBufferedKey(DWORD key, bool down, char* kstate)
 			switch (ucso->GrappleCargo(slotIndex))
 			{
 			case UCSO::Vessel::GRAPPLE_SUCCEEDED:
-				message = "The nearest cargo is grappled successfully.";
+				message = "The nearest cargo was grappled successfully.";
 				xrSound->PlayWav(SFX_CARGO_GRAPPLED);
 				break;
 
@@ -367,7 +364,7 @@ int XR2_Platform::clbkConsumeBufferedKey(DWORD key, bool down, char* kstate)
 			switch (ucso->ReleaseCargo(slotIndex))
 			{
 			case UCSO::Vessel::RELEASE_SUCCEEDED:
-				message = "The selected cargo is released successfully.";
+				message = "The selected cargo was released successfully.";
 				xrSound->PlayWav(SFX_CARGO_RELEASED);
 				break;
 
@@ -431,7 +428,7 @@ int XR2_Platform::clbkConsumeBufferedKey(DWORD key, bool down, char* kstate)
 			switch (ucso->DeleteCargo(slotIndex))
 			{
 			case UCSO::Vessel::RELEASE_SUCCEEDED:
-				message = "The selected cargo is deleted successfully.";
+				message = "The selected cargo was deleted successfully.";
 				break;
 
 			case UCSO::Vessel::RELEASE_SLOT_EMPTY:

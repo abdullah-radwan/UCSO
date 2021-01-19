@@ -22,13 +22,6 @@
 #include "VesselAPI.h"
 #include <filesystem>
 
-typedef const char* (*GetVersionFunction)();
-const char* version = nullptr;
-
-typedef UCSO::CustomCargo* (*CustomCargoFunction)(OBJHANDLE);
-HINSTANCE customCargoDll = nullptr;
-CustomCargoFunction GetCustomCargo = nullptr;
-
 void ExceptionHandler(unsigned int u, EXCEPTION_POINTERS* pExp) { throw; }
 
 UCSO::Vessel* UCSO::Vessel::CreateInstance(VESSEL* vessel) { return new VesselAPI(vessel); }
@@ -67,10 +60,12 @@ VesselAPI::VesselAPI(VESSEL* vessel)
 		if (customCargoDll) FreeLibrary(customCargoDll);
 
 		oapiWriteLog("UCSO API Warning: Couldn't load the custom cargo API");
+
+		version = nullptr;
 	}
 
-	// Set the available cargo list
-	InitAvailableCargo();
+	// Set the available cargo list if UCSO is installed
+	if (version) InitAvailableCargo();
 }
 
 VesselAPI::~VesselAPI() { if (customCargoDll) FreeLibrary(customCargoDll); }
@@ -79,6 +74,8 @@ const char* VesselAPI::GetUCSOVersion() { return version; }
 
 bool VesselAPI::SetSlotAttachment(int slot, ATTACHMENTHANDLE attachmentHandle, bool opened)
 {
+	if (!version) return false;
+
 	// If the passed slot exists and attachment handle is NULL
 	if (attachsMap.find(slot) != attachsMap.end() && !attachmentHandle) 
 	{
@@ -121,7 +118,7 @@ void VesselAPI::SetResourceRange(double resourceRange) { this->resourceRange = r
 
 void VesselAPI::SetBreathableRange(double breathableRange) { this->breathableRange = breathableRange; }
 
-int VesselAPI::GetAvailableCargoCount() { return availableCargoList.size(); }
+int VesselAPI::GetAvailableCargoCount() { return (version ? availableCargoList.size() : 0); }
 
 const char* VesselAPI::GetAvailableCargoName(int index)
 {
@@ -146,35 +143,31 @@ VesselAPI::CargoInfo VesselAPI::GetCargoInfo(int slot)
 	cargoInfo.name = cargoVessel->GetName();
 	cargoInfo.mass = cargoVessel->GetMass();
 
-	// If the custom cargo function is loaded
-	if (GetCustomCargo)
+	UCSO::CustomCargo* customCargo = GetCustomCargo(cargoVessel->GetHandle());
+
+	if (customCargo)
 	{
-		UCSO::CustomCargo* customCargo = GetCustomCargo(cargoVessel->GetHandle());
+		UCSO::CustomCargo::CargoInfo customInfo = customCargo->GetCargoInfo();
 
-		if (customCargo)
+		cargoInfo.type = static_cast<CargoType>(customInfo.type);
+
+		switch (cargoInfo.type)
 		{
-			UCSO::CustomCargo::CargoInfo customInfo = customCargo->GetCargoInfo();
+		case RESOURCE:
+			cargoInfo.resource = _strdup(customInfo.resource);
+			cargoInfo.resourceMass = customInfo.resourceMass;
 
-			cargoInfo.type = static_cast<CargoType>(customInfo.type);
-
-			switch (cargoInfo.type)
-			{
-			case RESOURCE:
-				cargoInfo.resource = _strdup(customInfo.resource);
-				cargoInfo.resourceMass = customInfo.resourceMass;
-
-				break;
-			case UNPACKABLE_ONLY:
-				cargoInfo.spawnCount = customInfo.spawnCount;
-			case PACKABLE_UNPACKABLE:
-				cargoInfo.unpackingType = CUSTOM_CARGO;
-				cargoInfo.breathable = customInfo.breathable;
-			default:
-				break;
-			}
-
-			return cargoInfo;
+			break;
+		case UNPACKABLE_ONLY:
+			cargoInfo.spawnCount = customInfo.spawnCount;
+		case PACKABLE_UNPACKABLE:
+			cargoInfo.unpackingType = CUSTOM_CARGO;
+			cargoInfo.breathable = customInfo.breathable;
+		default:
+			break;
 		}
+
+		return cargoInfo;
 	}
 
 	// Get the cargo interface
@@ -293,8 +286,9 @@ VesselAPI::GrappleResult VesselAPI::AddCargo(int index, int slot)
 	// If the cargo isn't created
 	if (!cargoHandle) return GRAPPLE_FAILED;
 
-	// If the cargo is a custom one
-	if (cargoName._Starts_with("CargoCustom"))
+	UCSO::CustomCargo* customCargo = GetCustomCargo(cargoHandle);
+
+	if (customCargo)
 	{
 		UCSO::CustomCargo* cargo = GetCustomCargo(cargoHandle);
 
@@ -314,7 +308,6 @@ VesselAPI::GrappleResult VesselAPI::AddCargo(int index, int slot)
 VesselAPI::GrappleResult VesselAPI::GrappleCargo(int slot)
 {
 	if (attachsMap.empty()) return GRAPPLE_SLOT_UNDEFINED;
-
 	else if (slot == -1) 
 	{
 		EmptyResult result = GetEmptySlot();
@@ -359,9 +352,7 @@ VesselAPI::GrappleResult VesselAPI::GrappleCargo(int slot)
 		if (maxTotalCargoMass != -1)
 			if (GetTotalCargoMass() + cargo->GetMass() > maxTotalCargoMass) { result = MAX_TOTAL_MASS_EXCEEDED; continue; }
 
-		UCSO::CustomCargo* customCargo = nullptr;
-
-		if (GetCustomCargo) customCargo = GetCustomCargo(cargo->GetHandle());
+		UCSO::CustomCargo* customCargo = GetCustomCargo(cargo->GetHandle());
 
 		if (customCargo)
 		{
@@ -434,9 +425,7 @@ VesselAPI::ReleaseResult VesselAPI::ReleaseCargo(int slot)
 
 	VESSEL* cargo = oapiGetVesselInterface(result.handle);
 
-	UCSO::CustomCargo* customCargo = nullptr;
-
-	if (GetCustomCargo) customCargo = GetCustomCargo(cargo->GetHandle());
+	UCSO::CustomCargo* customCargo = GetCustomCargo(cargo->GetHandle());
 
 	// If the vessel is landed
 	if (vessel->GetFlightStatus() & 1)
@@ -510,6 +499,8 @@ VesselAPI::ReleaseResult VesselAPI::ReleaseCargo(int slot)
 
 bool VesselAPI::PackCargo()
 {
+	if (!version) return false;
+
 	std::map<double, ResourceResult> cargoMap;
 
 	for (DWORD vesselIndex = 0; vesselIndex < oapiGetVesselCount(); vesselIndex++)
@@ -526,9 +517,7 @@ bool VesselAPI::PackCargo()
 
 		if (range > unpackingRange) continue;
 
-		UCSO::CustomCargo* customCargo = nullptr;
-
-		if (GetCustomCargo) customCargo = GetCustomCargo(cargo->GetHandle());
+		UCSO::CustomCargo* customCargo = GetCustomCargo(cargo->GetHandle());
 
 		if (customCargo)
 		{
@@ -569,6 +558,8 @@ bool VesselAPI::PackCargo()
 
 bool VesselAPI::UnpackCargo()
 {
+	if (!version) return false;
+
 	std::map<double, ResourceResult> cargoMap;
 
 	for (DWORD vesselIndex = 0; vesselIndex < oapiGetVesselCount(); vesselIndex++)
@@ -585,9 +576,7 @@ bool VesselAPI::UnpackCargo()
 
 		if (range > unpackingRange) continue;
 
-		UCSO::CustomCargo* customCargo = nullptr;
-
-		if (GetCustomCargo) customCargo = GetCustomCargo(cargo->GetHandle());
+		UCSO::CustomCargo* customCargo = GetCustomCargo(cargo->GetHandle());
 
 		if (customCargo)
 		{
@@ -688,9 +677,7 @@ double VesselAPI::DrainCargoResource(const char* resource, double mass, int slot
 		// If no cargo is attached in the given slot
 		if (!cargoHandle) return 0;
 
-		UCSO::CustomCargo* customCargo = nullptr;
-
-		if (GetCustomCargo) customCargo = GetCustomCargo(cargoHandle);
+		UCSO::CustomCargo* customCargo = GetCustomCargo(cargoHandle);
 
 		if (customCargo)
 		{
@@ -714,7 +701,7 @@ double VesselAPI::DrainCargoResource(const char* resource, double mass, int slot
 
 double VesselAPI::DrainStationOrUnpackedResource(const char* resource, double mass)
 {
-	if (mass <= 0 || !resource || !*resource) return 0;
+	if (!version || mass <= 0 || !resource || !*resource) return 0;
 
 	for (DWORD vesselIndex = 0; vesselIndex < oapiGetVesselCount(); vesselIndex++)
 	{
@@ -727,9 +714,7 @@ double VesselAPI::DrainStationOrUnpackedResource(const char* resource, double ma
 
 		if (strncmp(oVessel->GetClassNameA(), "UCSO", 4) == 0)
 		{
-			UCSO::CustomCargo* customCargo = nullptr;
-
-			if (GetCustomCargo) customCargo = GetCustomCargo(oVessel->GetHandle());
+			UCSO::CustomCargo* customCargo = GetCustomCargo(oVessel->GetHandle());
 
 			double drainedMass = 0;
 
@@ -807,6 +792,8 @@ double VesselAPI::DrainStationOrUnpackedResource(const char* resource, double ma
 
 bool VesselAPI::InBreathableCargo()
 {
+	if (!version) return false;
+
 	double breathableRange = this->breathableRange;
 
 	// Get the nearest cargo in 50 meters
@@ -827,6 +814,8 @@ bool VesselAPI::InBreathableCargo()
 
 VESSEL* VesselAPI::GetNearestBreathableCargo()
 {
+	if (!version) return nullptr;
+
 	std::pair<double, VESSEL*> pair = { breathableRange, nullptr };
 
 	for (DWORD vesselIndex = 0; vesselIndex < oapiGetVesselCount(); vesselIndex++)
@@ -843,9 +832,7 @@ VESSEL* VesselAPI::GetNearestBreathableCargo()
 
 		if (distance > pair.first) continue;
 
-		UCSO::CustomCargo* customCargo = nullptr;
-
-		if (GetCustomCargo) customCargo = GetCustomCargo(cargo->GetHandle());
+		UCSO::CustomCargo* customCargo = GetCustomCargo(cargo->GetHandle());
 
 		if (customCargo)
 		{
@@ -883,9 +870,6 @@ void VesselAPI::InitAvailableCargo()
 	{
 		// Get the filename
 		std::string path = entry.path().filename().string();
-
-		// If the cargo is a custom one and the custom cargo DLL couldn't be loaded, don't add the cargo
-		if (path._Starts_with("CargoCustom") && !GetCustomCargo) continue;
 
 		// Remove .cfg from the filename
 		availableCargoList.push_back(path.substr(0, path.find(".cfg")));
@@ -1021,9 +1005,7 @@ VesselAPI::ResourceResult VesselAPI::GetResourceCargo(std::string resource)
 
 		if (!cargoHandle) continue;
 
-		UCSO::CustomCargo* customCargo = nullptr;
-
-		if (GetCustomCargo) customCargo = GetCustomCargo(cargoHandle);
+		UCSO::CustomCargo* customCargo = GetCustomCargo(cargoHandle);
 
 		if (customCargo)
 		{

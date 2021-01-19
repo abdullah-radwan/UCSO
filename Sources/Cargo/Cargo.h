@@ -22,7 +22,7 @@
 #pragma once
 #include "..\API\Helper.h"
 
-DLLCLBK const char* GetUCSOVersion() { return _strdup("1.1"); }
+DLLCLBK const char* GetUCSOVersion() { return _strdup("1.1.1"); }
 
 namespace UCSO
 {
@@ -67,8 +67,8 @@ namespace UCSO
 
 		DataStruct dataStruct;
 
-		std::string packedMesh = "UCSO/";
-		std::string unpackedMesh = "UCSO/";
+		std::string packedMesh;
+		std::string unpackedMesh;
 
 		double resourceContainerMass = 0;
 		double unpackedSize;

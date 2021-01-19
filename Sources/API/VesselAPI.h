@@ -28,6 +28,9 @@
 #include "CustomCargo.h"
 #include "..\Cargo\Cargo.h"
 
+typedef const char* (*GetVersionFunction)();
+typedef UCSO::CustomCargo* (*CustomCargoFunction)(OBJHANDLE);
+
 class VesselAPI : public UCSO::Vessel
 {
 public:
@@ -95,6 +98,9 @@ public:
 
 private:
 	VESSEL* vessel;
+	const char* version = nullptr;
+	HINSTANCE customCargoDll = nullptr;
+	CustomCargoFunction GetCustomCargo = nullptr;
 
 	struct SlotData 
 	{

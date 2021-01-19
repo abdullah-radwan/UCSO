@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Version 1.1.1 - 2021-01-19
+### Changed
+- Cargo mesh files are no longer have to be in Meshes\UCSO folder.
+- More assertive behaviour on messing DLLs in the vessels' API.
+- Custom cargoes configuration file are no longer required to be started with CargoCustom.
+### Fixed
+- CTD when a mesh file has numbers in its name in the cargo configuration files.
+- UCSO text on the HUD color not changing with the HUD color in the ShuttlePB and XR2 platform, and some grammatical mistake.
+- Incorrect description on some API methods.
+
 ## Version 1.1 - 2021-01-12
 ### Changed
 - Cargoes must be attached in order to delete them.

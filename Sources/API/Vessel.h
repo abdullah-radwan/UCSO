@@ -118,7 +118,7 @@ namespace UCSO
 		//	slot: the slot number, which can be any number except -1. You can use the number multiple times to update the slot attachment handle.
 		//	attachmentHandle: the attachment handle. If nullptr, the passed slot will be removed.
 		//	opened: true if the slot door is opened, false if not.
-		// Returns true if the slot is added or removed, or false if the attachment handle is invalid.
+		// Returns true if the slot is added or removed, or false if the attachment handle is invalid or UCSO isn't installed.
 		// NOTE: DO NOT ATTACH ANY VESSEL TO A SLOT ATTACHMENT HANDLE OUTSIDE UCSO API.
 		//	IF THE ATTACHED VESSEL ISN'T A NORMAL OR CUSTOM UCSO CARGO, ORBITER WILL CRASH.
 		virtual bool SetSlotAttachment(int slot, ATTACHMENTHANDLE attachmentHandle, bool opened = true) = 0;
@@ -181,7 +181,7 @@ namespace UCSO
 		//	breathableRange: the search range in meters. The default value is 1000 meter.
 		virtual void SetBreathableRange(double breathableRange) = 0;
 
-		// Returns the available cargo count, which is the number of cargoes in Config\Vessels\UCSO folder.
+		// Returns the available cargo count which is the number of cargoes in Config\Vessels\UCSO folder, or 0 is UCSO isn't installed.
 		virtual int GetAvailableCargoCount() = 0;
 
 		// Returns the cargo name from the passed index, which is the filename from Config\Vessels\UCSO folder without .cfg,
@@ -228,16 +228,16 @@ namespace UCSO
 		virtual ReleaseResult ReleaseCargo(int slot = -1) = 0;
 
 		// Packs the nearest cargo in the unpacking range which can be set with SetUnpackingRange method.
-		// Returns true if the cargo is packed, or false if the packing failed or no packable cargo in the unpacking range is found.
+		// Returns true if the cargo is packed, or false if the packing failed, no packable cargo in the unpacking range is found, or UCSO isn't installed.
 		virtual bool PackCargo() = 0;
 
 		// Unpacks the nearest cargo in the unpacking range which can be set with SetUnpackingRange method.
-		// Returns true if the unpacking succeeded, or false if the unpacking failed or no cargo in the unpacking range is found.
+		// Returns true if the unpacking succeeded, or false if the unpacking failed, no cargo in the unpacking range is found, or UCSO isn't installed.
 		virtual bool UnpackCargo() = 0;
 
-		// Deletes the cargo in the passed slot, or the nearest cargo if -1 is passed.
+		// Deletes the cargo in the passed slot.
 		// Parameters:
-		//	slot: the slot number. If -1 is passed, the nearest cargo in the range set by SetCargoDeletionRange will be deleted.
+		//	slot: the slot number. If -1 is passed, the first occupied slot will be used.
 		// Returns the result as the ReleaseResult enum.
 		virtual ReleaseResult DeleteCargo(int slot = -1) = 0;
 
@@ -265,7 +265,7 @@ namespace UCSO
 		virtual bool InBreathableCargo() = 0;
 
 		// Gets the nearest breathable cargo. The search range can be set with SetBreathableSearchRange method.
-		// Returns the nearest breathable cargo, or nullptr if no cargo is found.
+		// Returns the nearest breathable cargo, or nullptr if no cargo is found or UCSO isn't installed.
 		virtual VESSEL* GetNearestBreathableCargo() = 0;
 
 		// Helper methods.
